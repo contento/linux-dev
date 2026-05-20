@@ -82,7 +82,7 @@ ARG SETUP_DOTFILES=true
 RUN if [ "${SETUP_DOTFILES}" = "true" ]; then \
     git clone --depth 1 https://github.com/contento/dotfiles.git ~/.dotfiles && \
     cd ~/.dotfiles && \
-    bash bootstrap.sh && \
+    NONINTERACTIVE=1 bash bootstrap.sh && \
     rm -f ~/.bashrc ~/.bash_logout ~/.profile && \
     bash stow-all.sh; \
     fi

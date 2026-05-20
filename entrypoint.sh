@@ -10,7 +10,7 @@ if [ ! -d "$DOTFILES_DIR/.git" ]; then
 
   if [ -d "$DOTFILES_DIR" ]; then
     cd "$DOTFILES_DIR"
-    bash bootstrap.sh || true
+    NONINTERACTIVE=1 bash bootstrap.sh || true
     rm -f ~/.bashrc ~/.bash_logout ~/.profile
     bash stow-all.sh || true
   fi
