@@ -33,7 +33,16 @@ It is built around [contento/dotfiles](https://github.com/contento/dotfiles), so
 | RAM | 512 MB | 2–4 GB |
 | Disk | 10 GB | 20 GB |
 
-**Host**: Docker 20.10+, Docker Compose 2.0+. Works on macOS, Linux, Windows (WSL2).
+### Required tools
+
+| Tool | Version | Install |
+| --- | --- | --- |
+| Docker | 20.10+ | [docs.docker.com/get-docker](https://docs.docker.com/get-docker/) |
+| Docker Compose | 2.0+ | included with Docker Desktop; `apt install docker-compose-plugin` on Linux |
+| Make | any | `brew install make` / `apt install make` |
+| Git | any | `brew install git` / `apt install git` |
+
+Works on macOS, Linux, and Windows (WSL2).
 
 ## Quick Start
 
