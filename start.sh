@@ -5,23 +5,26 @@ DISTRO="ubuntu"
 SILENT=false
 BUILD=false
 NAME=""
+PORT=""
 
-skip_next=false
+next_val=""
 for arg in "$@"; do
-  if [[ "$skip_next" == true ]]; then
-    NAME="$arg"
-    skip_next=false
+  if [[ -n "$next_val" ]]; then
+    declare "$next_val=$arg"
+    next_val=""
     continue
   fi
   case $arg in
     ubuntu) DISTRO="ubuntu" ;;
     debian) DISTRO="debian" ;;
-    --silent) SILENT=true ;;
-    --build)  BUILD=true ;;
-    --name)   skip_next=true ;;
-    --name=*) NAME="${arg#--name=}" ;;
+    --silent)   SILENT=true ;;
+    --build)    BUILD=true ;;
+    --name)     next_val="NAME" ;;
+    --name=*)   NAME="${arg#--name=}" ;;
+    --port)     next_val="PORT" ;;
+    --port=*)   PORT="${arg#--port=}" ;;
     --help)
-      echo "Usage: ./start.sh [distro] [--name <name>] [--build] [--silent] [--help]"
+      echo "Usage: ./start.sh [distro] [--name <name>] [--port <port>] [--build] [--silent] [--help]"
       echo ""
       echo "  Start the linux-dev container and open a bash shell."
       echo ""
@@ -31,6 +34,7 @@ for arg in "$@"; do
       echo ""
       echo "Options:"
       echo "  --name    Container name (default: ubuntu-dev / debian-dev)"
+      echo "  --port    SSH host port    (default: ubuntu→2222, debian→2223)"
       echo "  --build   Build the image before starting"
       echo "  --silent  Skip confirmation prompt (for scripts/automation)"
       echo "  --help    Show this help message"
@@ -41,11 +45,16 @@ for arg in "$@"; do
 done
 
 case $DISTRO in
-  ubuntu) BASE_IMAGE="ubuntu:26.04" ;;
-  debian) BASE_IMAGE="debian:trixie" ;;
+  ubuntu) BASE_IMAGE="ubuntu:26.04";  DEFAULT_PORT=2222 ;;
+  debian) BASE_IMAGE="debian:trixie"; DEFAULT_PORT=2223 ;;
 esac
 
 CONTAINER_NAME="${NAME:-${DISTRO}-dev}"
+SSH_PORT="${PORT:-$DEFAULT_PORT}"
+
+# Use container name as compose project so volumes/networks are isolated per instance
+export BASE_IMAGE CONTAINER_NAME SSH_PORT
+export COMPOSE_PROJECT_NAME="$CONTAINER_NAME"
 
 if ! docker info &>/dev/null; then
   echo "Error: Docker is not running." >&2
@@ -53,12 +62,10 @@ if ! docker info &>/dev/null; then
 fi
 
 if [[ "$SILENT" == false ]]; then
-  read -rp "Start linux-dev ($BASE_IMAGE)? [Y/n] " reply
+  read -rp "Start $CONTAINER_NAME ($BASE_IMAGE, SSH :$SSH_PORT)? [Y/n] " reply
   reply=${reply:-Y}
   [[ "$reply" =~ ^[Yy]$ ]] || exit 0
 fi
-
-export BASE_IMAGE CONTAINER_NAME
 
 if [[ "$BUILD" == true ]]; then
   docker compose build
