@@ -3,13 +3,14 @@
 param(
     [ValidateSet("ubuntu", "debian")]
     [string]$Distro = "ubuntu",
+    [string]$Name = "",
     [switch]$Build,
     [switch]$Silent,
     [switch]$Help
 )
 
 if ($Help) {
-    Write-Host "Usage: .\start.ps1 [[-Distro] <distro>] [-Silent] [-Help]"
+    Write-Host "Usage: .\start.ps1 [[-Distro] <distro>] [-Name <name>] [-Build] [-Silent] [-Help]"
     Write-Host ""
     Write-Host "  Start the linux-dev container and open a bash shell."
     Write-Host ""
@@ -18,6 +19,7 @@ if ($Help) {
     Write-Host "  debian  Debian 13 (trixie)"
     Write-Host ""
     Write-Host "Options:"
+    Write-Host "  -Name    Container name (default: ubuntu-dev / debian-dev)"
     Write-Host "  -Build   Build the image before starting"
     Write-Host "  -Silent  Skip confirmation prompt (for scripts/automation)"
     Write-Host "  -Help    Show this help message"
@@ -26,6 +28,7 @@ if ($Help) {
 
 $baseImages = @{ ubuntu = "ubuntu:26.04"; debian = "debian:trixie" }
 $env:BASE_IMAGE = $baseImages[$Distro]
+$env:CONTAINER_NAME = if ($Name) { $Name } else { "$Distro-dev" }
 
 $ErrorActionPreference = 'Stop'
 

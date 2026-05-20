@@ -15,7 +15,7 @@ services:
         INCLUDE_SSH_SERVER: '${INCLUDE_SSH_SERVER:-false}'
         SETUP_DOTFILES: '${SETUP_DOTFILES:-true}'
 
-    container_name: linux-dev
+    container_name: ${CONTAINER_NAME:-linux-dev}
 
     # Keep container running
     stdin_open: true
