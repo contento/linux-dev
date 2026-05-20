@@ -176,27 +176,45 @@ ubuntu:26.04 / debian:trixie
 
 ## SSH Access
 
-Build with SSH server enabled:
+### 1. Build with SSH server enabled
 
 ```bash
-INCLUDE_SSH_SERVER=true docker-compose build
-# or
 make build-ssh
+# or
+INCLUDE_SSH_SERVER=true docker-compose build
 ```
 
-Then start with your public key:
+### 2. Start the container with your public key
 
 ```bash
 SSH_PUBLIC_KEY="$(cat ~/.ssh/id_ed25519.pub)" docker-compose up -d
 ```
 
-Connect from the host:
+The key is written to `/home/dev/.ssh/authorized_keys` on first start.
+
+### 3. Connect
 
 ```bash
 ssh -p 2222 dev@localhost
 ```
 
-Key-based auth only — password login is disabled. Change the host port via `SSH_PORT` (default: `2222`).
+Or add an entry to `~/.ssh/config` for convenience:
+
+```sshconfig
+Host linux-dev
+  HostName localhost
+  Port 2222
+  User dev
+  IdentityFile ~/.ssh/id_ed25519
+```
+
+Then simply:
+
+```bash
+ssh linux-dev
+```
+
+Password login is disabled — key-based auth only. Change the host port by setting `SSH_PORT` before starting (default: `2222`).
 
 ## Multi-platform
 
