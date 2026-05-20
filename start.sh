@@ -1,15 +1,22 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+DISTRO="ubuntu"
 SILENT=false
 
 for arg in "$@"; do
   case $arg in
+    ubuntu) DISTRO="ubuntu" ;;
+    debian) DISTRO="debian" ;;
     --silent) SILENT=true ;;
     --help)
-      echo "Usage: ./start.sh [--silent] [--help]"
+      echo "Usage: ./start.sh [distro] [--silent] [--help]"
       echo ""
       echo "  Start the linux-dev container and open a bash shell."
+      echo ""
+      echo "Distros:"
+      echo "  ubuntu  Ubuntu 26.04 LTS (default)"
+      echo "  debian  Debian 13 (trixie)"
       echo ""
       echo "Options:"
       echo "  --silent  Skip confirmation prompt (for scripts/automation)"
@@ -20,20 +27,25 @@ for arg in "$@"; do
   esac
 done
 
+case $DISTRO in
+  ubuntu) BASE_IMAGE="ubuntu:26.04" ;;
+  debian) BASE_IMAGE="debian:trixie" ;;
+esac
+
 if ! docker info &>/dev/null; then
   echo "Error: Docker is not running." >&2
   exit 1
 fi
 
 if [[ "$SILENT" == false ]]; then
-  read -rp "Start linux-dev (Ubuntu 26.04)? [Y/n] " reply
+  read -rp "Start linux-dev ($BASE_IMAGE)? [Y/n] " reply
   reply=${reply:-Y}
   [[ "$reply" =~ ^[Yy]$ ]] || exit 0
 fi
 
 # Start only if not already running
-if ! docker compose ps --status running 2>/dev/null | grep -q dev; then
-  docker compose up -d
+if ! BASE_IMAGE=$BASE_IMAGE docker compose ps --status running 2>/dev/null | grep -q dev; then
+  BASE_IMAGE=$BASE_IMAGE docker compose up -d
 fi
 
-docker compose exec dev bash
+BASE_IMAGE=$BASE_IMAGE docker compose exec dev bash
