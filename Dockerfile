@@ -39,7 +39,7 @@ RUN useradd -m -s /bin/bash -G sudo dev \
 # Development stage
 FROM base as dev
 
-# Additional dev tools (optional, can be toggled via build arg)
+# Additional dev tools (optional)
 ARG INCLUDE_EXTRA_TOOLS=true
 RUN if [ "${INCLUDE_EXTRA_TOOLS}" = "true" ]; then \
     apt-get update && apt-get install -y --no-install-recommends \
@@ -53,6 +53,18 @@ RUN if [ "${INCLUDE_EXTRA_TOOLS}" = "true" ]; then \
     vim \
     zsh \
     && rm -rf /var/lib/apt/lists/*; \
+    fi
+
+# SSH server (optional — enable with INCLUDE_SSH_SERVER=true)
+ARG INCLUDE_SSH_SERVER=false
+RUN if [ "${INCLUDE_SSH_SERVER}" = "true" ]; then \
+    apt-get update && apt-get install -y --no-install-recommends openssh-server \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd \
+    && echo "PasswordAuthentication no" >> /etc/ssh/sshd_config \
+    && echo "PubkeyAuthentication yes"  >> /etc/ssh/sshd_config \
+    && echo "PermitRootLogin no"        >> /etc/ssh/sshd_config \
+    && echo "AllowUsers dev"            >> /etc/ssh/sshd_config; \
     fi
 
 # Set working directory

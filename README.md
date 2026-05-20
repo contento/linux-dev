@@ -174,6 +174,42 @@ ubuntu:26.04 / debian:trixie
 - **Home dir**: `dev_home` Docker volume (survives container restarts)
 - Data is lost only with `docker-compose down -v`
 
+## SSH Access
+
+Build with SSH server enabled:
+
+```bash
+INCLUDE_SSH_SERVER=true docker-compose build
+# or
+make build-ssh
+```
+
+Then start with your public key:
+
+```bash
+SSH_PUBLIC_KEY="$(cat ~/.ssh/id_ed25519.pub)" docker-compose up -d
+```
+
+Connect from the host:
+
+```bash
+ssh -p 2222 dev@localhost
+```
+
+Key-based auth only — password login is disabled. Change the host port via `SSH_PORT` (default: `2222`).
+
+## Multi-platform
+
+The published GHCR image supports `linux/amd64` and `linux/arm64` (built automatically on push to `main`).
+
+To build locally for both platforms:
+
+```bash
+make build-multiplatform
+```
+
+Requires a `docker buildx` builder with multi-platform support. Docker Desktop includes one by default.
+
 ## Lifecycle
 
 ```bash

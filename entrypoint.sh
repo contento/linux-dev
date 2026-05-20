@@ -1,9 +1,6 @@
 #!/bin/bash
 set -e
 
-# Entrypoint script for dev environment
-# Handles optional dotfiles setup and shell initialization
-
 DOTFILES_DIR="${HOME}/.dotfiles"
 
 # Setup dotfiles if not already done
@@ -19,5 +16,16 @@ if [ ! -d "$DOTFILES_DIR/.git" ]; then
   fi
 fi
 
-# Execute passed command or default shell
+# Start SSH server if installed
+if command -v sshd &>/dev/null; then
+  if [ -n "${SSH_PUBLIC_KEY:-}" ]; then
+    mkdir -p ~/.ssh
+    chmod 700 ~/.ssh
+    echo "${SSH_PUBLIC_KEY}" >> ~/.ssh/authorized_keys
+    chmod 600 ~/.ssh/authorized_keys
+  fi
+  sudo mkdir -p /run/sshd
+  sudo /usr/sbin/sshd
+fi
+
 exec "$@"

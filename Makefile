@@ -37,6 +37,14 @@ build-ubuntu: ## Build Ubuntu 26.04 LTS image
 build-debian: ## Build Debian 13 (trixie) image
 	BASE_IMAGE=$(DEBIAN_LTS) docker-compose build
 
+build-multiplatform: ## Build multi-platform image (amd64 + arm64) — requires buildx
+	docker buildx build --platform linux/amd64,linux/arm64 \
+	  --build-arg SETUP_DOTFILES=false \
+	  -t linux-dev:latest .
+
+build-ssh: ## Build image with SSH server enabled
+	INCLUDE_SSH_SERVER=true docker-compose build
+
 up: ## Start the container (default: Ubuntu LTS)
 	docker-compose up -d
 	@echo "$(GREEN)✓ Container started$(NC)"

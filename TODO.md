@@ -7,14 +7,14 @@
   - [ ] Automated smoke tests (image runs, user is dev, workspace exists)
   - [ ] Security scanning (Trivy)
 
-- [ ] **Multi-platform build**
-  - [ ] arm64 + amd64 via `docker buildx` (Apple Silicon + Linux x86)
-  - [ ] Publish both platforms to GHCR on release
+- [x] **Multi-platform build**
+  - [x] arm64 + amd64 via `docker buildx` (Apple Silicon + Linux x86)
+  - [x] Publish both platforms to GHCR on release
 
-- [ ] **SSH Server mode**
-  - [ ] Install and configure `openssh-server` in the image
-  - [ ] Expose port 22 in `docker-compose.yml` (optional profile)
-  - [ ] Document key-based auth setup and connection example
+- [x] **SSH Server mode**
+  - [x] Install and configure `openssh-server` via `INCLUDE_SSH_SERVER=true`
+  - [x] Port 2222→22 mapped in `docker-compose.yml`
+  - [x] `SSH_PUBLIC_KEY` env var writes to `~/.ssh/authorized_keys` at startup
 
 ## Priority: Medium
 

@@ -10,8 +10,9 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        BASE_IMAGE: ${BASE_IMAGE:-ubuntu:24.04}
+        BASE_IMAGE: ${BASE_IMAGE:-ubuntu:26.04}
         INCLUDE_EXTRA_TOOLS: '${INCLUDE_EXTRA_TOOLS:-true}'
+        INCLUDE_SSH_SERVER: '${INCLUDE_SSH_SERVER:-false}'
         SETUP_DOTFILES: '${SETUP_DOTFILES:-true}'
 
     container_name: linux-dev
@@ -20,7 +21,11 @@ services:
     stdin_open: true
     tty: true
 
-    # Resource limits (light environment)
+    # SSH access — only active when image built with INCLUDE_SSH_SERVER=true
+    ports:
+      - "${SSH_PORT:-2222}:22"
+
+    # Resource limits
     deploy:
       resources:
         limits:
@@ -39,6 +44,7 @@ services:
     environment:
       TERM: xterm-256color
       SHELL: /bin/bash
+      SSH_PUBLIC_KEY: ${SSH_PUBLIC_KEY:-}
 
     # Network
     networks:

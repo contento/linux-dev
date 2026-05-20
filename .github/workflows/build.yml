@@ -44,11 +44,13 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=sha,prefix={{branch}}-
 
-      - name: Build image (dotfiles disabled for CI)
+      # Single-platform build loaded into the local daemon for smoke testing
+      - name: Build image for smoke test
         uses: docker/build-push-action@v6
         with:
           context: .
           push: false
+          load: true
           tags: linux-dev:test
           build-args: |
             SETUP_DOTFILES=false
@@ -61,12 +63,14 @@ jobs:
           docker run --rm linux-dev:test pwd | grep -q workspace
           echo "✓ Smoke tests passed"
 
-      - name: Build and push
+      # Multi-platform build pushed to registry on non-PR events
+      - name: Build and push (amd64 + arm64)
         if: github.event_name != 'pull_request'
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
