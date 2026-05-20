@@ -23,7 +23,7 @@
 
 Supported bases: `ubuntu:26.04` (default), `debian:trixie` — selected via `BASE_IMAGE` build arg.
 
-Supported hosts: macOS, Linux, Windows 11 (WSL2 recommended — run all commands from the WSL2 terminal).
+Supported hosts: macOS, Linux, Windows 11 (WSL2 recommended — run all commands from the WSL2 terminal). On Windows, PowerShell 7+ (`pwsh`) is required for `start.ps1`.
 
 ### Dotfiles Integration
 
@@ -52,6 +52,11 @@ echo "dev ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/dev
 ```
 
 Security best practice; prevents accidental root operations.
+
+### Entry Scripts
+
+- `start.sh` — macOS/Linux/WSL2. Prompts for confirmation then runs `docker compose up -d` + `exec`. Pass `--silent` to skip the prompt.
+- `start.ps1` — Windows 11, requires PowerShell 7+ (`#Requires -Version 7`). Same behaviour; pass `-Silent` to skip the prompt. Both scripts detect if the container is already running and skip `up`.
 
 ## Common Tasks
 
