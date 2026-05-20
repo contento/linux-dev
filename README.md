@@ -2,7 +2,7 @@
 
 A minimal, reproducible Docker development environment for Debian-based Linux distributions.
 
-```
+```text
   o  o
 \______/
   |
@@ -28,7 +28,7 @@ It is built around [contento/dotfiles](https://github.com/contento/dotfiles), so
 ## System Requirements
 
 | Resource | Minimum | Recommended |
-|----------|---------|-------------|
+| --- | --- | --- |
 | CPU | 1 core | 2–4 cores |
 | RAM | 512 MB | 2–4 GB |
 | Disk | 10 GB | 20 GB |
@@ -63,22 +63,28 @@ Then open your WSL2 terminal and run all `make` commands from there — no extra
 ```bash
 git clone https://github.com/contento/linux-dev.git
 cd linux-dev
-
-make up      # Ubuntu 26.04 LTS (default)
-make exec    # open shell
 ```
 
-Or with docker-compose directly:
+### macOS / Linux / WSL2
 
 ```bash
-docker-compose up -d
-docker-compose exec dev bash
+./start.sh          # prompts for confirmation, then starts + opens shell
+./start.sh --silent # skip prompt (for scripts/automation)
 ```
+
+### Windows 11 (PowerShell)
+
+```powershell
+.\start.ps1          # prompts for confirmation, then starts + opens shell
+.\start.ps1 -Silent  # skip prompt
+```
+
+Both scripts start the container if it is not already running, then drop you into a bash shell. Use `make` targets for finer-grained control.
 
 ## Supported Distributions
 
 | Distribution | Base Image | Status |
-|-------------|------------|--------|
+| --- | --- | --- |
 | Ubuntu 26.04 LTS (resolute) | `ubuntu:26.04` | ✅ Default |
 | Debian 13 (trixie) | `debian:trixie` | ✅ Supported |
 | Arch Linux | N/A | ⏳ Planned |
@@ -96,7 +102,7 @@ BASE_IMAGE=debian:trixie docker-compose up -d
 ### Build Arguments
 
 | Argument | Default | Description |
-|----------|---------|-------------|
+| --- | --- | --- |
 | `BASE_IMAGE` | `ubuntu:26.04` | Base distro image |
 | `INCLUDE_EXTRA_TOOLS` | `true` | Install bat, fzf, htop, jq, tmux, vim, zsh via apt |
 | `SETUP_DOTFILES` | `true` | Clone and apply contento/dotfiles |
@@ -112,10 +118,10 @@ docker-compose build \
 
 Defaults in `docker-compose.yml`:
 
-| Resource | Limit    | Reservation |
-|----------|----------|-------------|
-| CPU      | 4 cores  | 1 core      |
-| Memory   | 4 GB     | 512 MB      |
+| Resource | Limit | Reservation |
+| --- | --- | --- |
+| CPU | 4 cores | 1 core |
+| Memory | 4 GB | 512 MB |
 
 Adjust in `docker-compose.yml` under `deploy.resources` as needed.
 
