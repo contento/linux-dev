@@ -74,6 +74,9 @@ WORKDIR /home/dev/workspace
 COPY --chown=dev:dev entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
+# Pre-install starship as root so bootstrap.sh (running as dev) skips the sudo-requiring installer
+RUN curl -fsSL https://starship.rs/install.sh | sh -s -- --yes
+
 # Switch to dev user
 USER dev
 
