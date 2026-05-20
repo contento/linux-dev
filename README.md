@@ -182,23 +182,17 @@ ubuntu:26.04 / debian:trixie
 
 ## SSH Access
 
-### 1. Build with SSH server enabled
+SSH server is included by default. To disable: `INCLUDE_SSH_SERVER=false docker compose build`.
+
+### 1. Start the container with your public key
 
 ```bash
-make build-ssh
-# or
-INCLUDE_SSH_SERVER=true docker-compose build
-```
-
-### 2. Start the container with your public key
-
-```bash
-SSH_PUBLIC_KEY="$(cat ~/.ssh/id_ed25519.pub)" docker-compose up -d
+SSH_PUBLIC_KEY="$(cat ~/.ssh/id_ed25519.pub)" docker compose up -d
 ```
 
 The key is written to `/home/dev/.ssh/authorized_keys` on first start.
 
-### 3. Connect
+### 2. Connect
 
 ```bash
 ssh -p 2222 dev@localhost

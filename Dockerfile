@@ -56,7 +56,7 @@ RUN if [ "${INCLUDE_EXTRA_TOOLS}" = "true" ]; then \
     fi
 
 # SSH server (optional — enable with INCLUDE_SSH_SERVER=true)
-ARG INCLUDE_SSH_SERVER=false
+ARG INCLUDE_SSH_SERVER=true
 RUN if [ "${INCLUDE_SSH_SERVER}" = "true" ]; then \
     apt-get update && apt-get install -y --no-install-recommends openssh-server \
     && rm -rf /var/lib/apt/lists/* \
