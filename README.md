@@ -41,6 +41,7 @@ It is built around [contento/dotfiles](https://github.com/contento/dotfiles), so
 | Docker Compose | included | `apt install docker-compose-plugin` | included with Docker Desktop |
 | Make | `brew install make` | `apt install make` | `winget install GnuWin32.Make` |
 | Git | `brew install git` | `apt install git` | `winget install Git.Git` |
+| PowerShell 7+ | — | — | `winget install Microsoft.PowerShell` |
 
 ### Windows 11 (WSL2)
 
@@ -73,6 +74,14 @@ cd linux-dev
 ```
 
 ### Windows 11 (PowerShell)
+
+Requires **PowerShell 7+** (`pwsh`). Install it with:
+
+```powershell
+winget install Microsoft.PowerShell
+```
+
+Then run from a `pwsh` terminal:
 
 ```powershell
 .\start.ps1          # prompts for confirmation, then starts + opens shell
