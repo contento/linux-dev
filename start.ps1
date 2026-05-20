@@ -1,8 +1,20 @@
 #Requires -Version 7
 
 param(
-    [switch]$Silent
+    [switch]$Silent,
+    [switch]$Help
 )
+
+if ($Help) {
+    Write-Host "Usage: .\start.ps1 [-Silent] [-Help]"
+    Write-Host ""
+    Write-Host "  Start the linux-dev container and open a bash shell."
+    Write-Host ""
+    Write-Host "Options:"
+    Write-Host "  -Silent  Skip confirmation prompt (for scripts/automation)"
+    Write-Host "  -Help    Show this help message"
+    exit 0
+}
 
 $ErrorActionPreference = 'Stop'
 
