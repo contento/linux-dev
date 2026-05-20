@@ -69,10 +69,11 @@ cd linux-dev
 ### macOS / Linux / WSL2
 
 ```bash
-./start.sh              # Ubuntu 26.04 LTS (default)
-./start.sh debian       # Debian 13 (trixie)
-./start.sh --silent     # skip confirmation prompt
-./start.sh --help       # show usage
+./start.sh --build          # build image then start (first time)
+./start.sh                  # start with Ubuntu 26.04 LTS (default)
+./start.sh debian           # start with Debian 13 (trixie)
+./start.sh --silent         # skip confirmation prompt
+./start.sh --help           # show usage
 ```
 
 ### Windows 11 (PowerShell)
@@ -86,10 +87,11 @@ winget install Microsoft.PowerShell
 Then run from a `pwsh` terminal:
 
 ```powershell
-.\start.ps1                  # Ubuntu 26.04 LTS (default)
-.\start.ps1 -Distro debian   # Debian 13 (trixie)
-.\start.ps1 -Silent          # skip confirmation prompt
-.\start.ps1 -Help            # show usage
+.\start.ps1 -Build               # build image then start (first time)
+.\start.ps1                      # start with Ubuntu 26.04 LTS (default)
+.\start.ps1 -Distro debian       # start with Debian 13 (trixie)
+.\start.ps1 -Silent              # skip confirmation prompt
+.\start.ps1 -Help                # show usage
 ```
 
 Both scripts start the container if it is not already running, then drop you into a bash shell. Use `make` targets for finer-grained control.

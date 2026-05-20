@@ -3,14 +3,16 @@ set -euo pipefail
 
 DISTRO="ubuntu"
 SILENT=false
+BUILD=false
 
 for arg in "$@"; do
   case $arg in
     ubuntu) DISTRO="ubuntu" ;;
     debian) DISTRO="debian" ;;
     --silent) SILENT=true ;;
+    --build)  BUILD=true ;;
     --help)
-      echo "Usage: ./start.sh [distro] [--silent] [--help]"
+      echo "Usage: ./start.sh [distro] [--build] [--silent] [--help]"
       echo ""
       echo "  Start the linux-dev container and open a bash shell."
       echo ""
@@ -19,6 +21,7 @@ for arg in "$@"; do
       echo "  debian  Debian 13 (trixie)"
       echo ""
       echo "Options:"
+      echo "  --build   Build the image before starting"
       echo "  --silent  Skip confirmation prompt (for scripts/automation)"
       echo "  --help    Show this help message"
       exit 0
@@ -41,6 +44,10 @@ if [[ "$SILENT" == false ]]; then
   read -rp "Start linux-dev ($BASE_IMAGE)? [Y/n] " reply
   reply=${reply:-Y}
   [[ "$reply" =~ ^[Yy]$ ]] || exit 0
+fi
+
+if [[ "$BUILD" == true ]]; then
+  BASE_IMAGE=$BASE_IMAGE docker compose build
 fi
 
 # Start only if not already running

@@ -3,6 +3,7 @@
 param(
     [ValidateSet("ubuntu", "debian")]
     [string]$Distro = "ubuntu",
+    [switch]$Build,
     [switch]$Silent,
     [switch]$Help
 )
@@ -17,6 +18,7 @@ if ($Help) {
     Write-Host "  debian  Debian 13 (trixie)"
     Write-Host ""
     Write-Host "Options:"
+    Write-Host "  -Build   Build the image before starting"
     Write-Host "  -Silent  Skip confirmation prompt (for scripts/automation)"
     Write-Host "  -Help    Show this help message"
     exit 0
@@ -37,6 +39,10 @@ if ($LASTEXITCODE -ne 0) {
 if (-not $Silent) {
     $reply = Read-Host "Start linux-dev ($($env:BASE_IMAGE))? [Y/n]"
     if ($reply -and $reply -notmatch '^[Yy]$') { exit 0 }
+}
+
+if ($Build) {
+    docker compose build
 }
 
 # Start only if not already running
