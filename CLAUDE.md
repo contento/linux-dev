@@ -7,6 +7,7 @@
 **linux-dev** is a reproducible Docker development environment for terminal-based workflows on Debian/Ubuntu systems. It integrates with [contento/dotfiles](https://github.com/contento/dotfiles) to deliver a fully configured shell out of the box.
 
 ### Design Philosophy
+
 1. **Minimal**: Only include what's necessary; extras are optional
 2. **Flexible**: Build args allow customization without code changes
 3. **Non-root**: `dev` user for safety; passwordless sudo for when needed
@@ -21,6 +22,8 @@
 - **dev**: Optional apt tools (`INCLUDE_EXTRA_TOOLS`), dotfiles setup (`SETUP_DOTFILES`)
 
 Supported bases: `ubuntu:26.04` (default), `debian:trixie` — selected via `BASE_IMAGE` build arg.
+
+Supported hosts: macOS, Linux, Windows 11 (WSL2 recommended — run all commands from the WSL2 terminal).
 
 ### Dotfiles Integration
 
@@ -68,6 +71,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 3. Document in README.md and here
 
 ### Debugging a Build
+
 ```bash
 # Force rebuild
 docker build --no-cache --progress=plain -t linux-dev:debug . 2>&1 | tee build.log
@@ -82,6 +86,7 @@ docker run --rm linux-dev:latest dpkg -l | grep "tool-name"
 ## Testing Checklist
 
 ### After Dockerfile Changes
+
 ```bash
 docker build --no-cache -t linux-dev:test --build-arg SETUP_DOTFILES=false .
 docker run --rm linux-dev:test whoami   # dev
@@ -91,6 +96,7 @@ docker run --rm linux-dev:test which tmux
 ```
 
 ### After docker-compose Changes
+
 ```bash
 docker compose config   # validate
 docker-compose up -d && docker-compose exec dev whoami && docker-compose down
@@ -99,7 +105,7 @@ docker-compose up -d && docker-compose exec dev whoami && docker-compose down
 ## Common Pitfalls
 
 | Pitfall | Solution |
-|---------|----------|
+| --- | --- |
 | stow fails on existing files | Remove default shell files before `stow-all.sh` |
 | bootstrap.sh in CI hangs | Always set `SETUP_DOTFILES=false` in CI builds |
 | Stale apt cache | `apt-get update` before any install |

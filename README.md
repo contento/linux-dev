@@ -35,14 +35,28 @@ It is built around [contento/dotfiles](https://github.com/contento/dotfiles), so
 
 ### Required tools
 
-| Tool | Version | Install |
-| --- | --- | --- |
-| Docker | 20.10+ | [docs.docker.com/get-docker](https://docs.docker.com/get-docker/) |
-| Docker Compose | 2.0+ | included with Docker Desktop; `apt install docker-compose-plugin` on Linux |
-| Make | any | `brew install make` / `apt install make` |
-| Git | any | `brew install git` / `apt install git` |
+| Tool | macOS | Linux | Windows 11 |
+| --- | --- | --- | --- |
+| Docker Desktop | [docker.com](https://docs.docker.com/get-docker/) | [docker.com](https://docs.docker.com/get-docker/) | `winget install Docker.DockerDesktop` |
+| Docker Compose | included | `apt install docker-compose-plugin` | included with Docker Desktop |
+| Make | `brew install make` | `apt install make` | `winget install GnuWin32.Make` |
+| Git | `brew install git` | `apt install git` | `winget install Git.Git` |
 
-Works on macOS, Linux, and Windows (WSL2).
+### Windows 11 (WSL2)
+
+WSL2 is the recommended path on Windows — it gives you a native Linux environment where everything just works:
+
+```powershell
+# 1. Enable WSL2 (built into Windows 11)
+wsl --install
+
+# 2. Install Docker Desktop with WSL2 backend
+winget install Docker.DockerDesktop
+```
+
+Open Docker Desktop → Settings → Resources → WSL Integration → enable your distro.
+
+Then open your WSL2 terminal and run all `make` commands from there — no extra tools needed.
 
 ## Quick Start
 
