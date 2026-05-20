@@ -1,0 +1,42 @@
+# Git files
+.git
+.gitignore
+.gitattributes
+
+# IDE & Editor files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+node_modules/
+.next/
+
+# Docker & CI files
+.dockerignore
+docker-compose*.yml  # Exclude compose files from context
+Dockerfile          # Exclude (if building from URL)
+.github/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+.cache/
+.env.local
+
+# Dependencies (usually shouldn't copy)
+vendor/
+.bundler/
