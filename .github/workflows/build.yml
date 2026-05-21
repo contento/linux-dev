@@ -59,8 +59,8 @@ jobs:
 
       - name: Smoke test
         run: |
-          docker run --rm linux-dev:test whoami | grep -q dev
-          docker run --rm linux-dev:test pwd | grep -q workspace
+          docker run --rm -e SKIP_DOTFILES=true linux-dev:test whoami | grep -q dev
+          docker run --rm -e SKIP_DOTFILES=true linux-dev:test pwd | grep -q workspace
           echo "✓ Smoke tests passed"
 
       # Multi-platform build pushed to registry on non-PR events
@@ -95,7 +95,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run Trivy
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: config
           scan-ref: .

@@ -3,8 +3,8 @@ set -e
 
 DOTFILES_DIR="${HOME}/.dotfiles"
 
-# Setup dotfiles if not already done
-if [ ! -d "$DOTFILES_DIR/.git" ]; then
+# Setup dotfiles if not already done (skip when SKIP_DOTFILES=true, e.g. CI smoke tests)
+if [ "${SKIP_DOTFILES:-false}" != "true" ] && [ ! -d "$DOTFILES_DIR/.git" ]; then
   echo "Setting up dotfiles..."
   git clone --depth 1 https://github.com/contento/dotfiles.git "$DOTFILES_DIR" || true
 
