@@ -22,8 +22,9 @@ It is built around [contento/dotfiles](https://github.com/contento/dotfiles), so
 - **Flexible**: Build args for customizing tools and dotfiles setup
 - **Reproducible**: Consistent environment across machines
 - **User-safe**: Non-root `dev` user with passwordless sudo
-- **Terminal-first**: Modern CLI toolchain via contento/dotfiles
-- **Dotfiles-ready**: Runs `bootstrap.sh` + `stow-all.sh` from contento/dotfiles
+- **Terminal-first**: zsh + starship + full CLI toolchain via contento/dotfiles
+- **SSH-ready**: SSH server included by default, key-based auth only
+- **Multi-instance**: Run multiple named containers without port or volume collisions
 
 ## System Requirements
 
@@ -57,7 +58,7 @@ winget install Docker.DockerDesktop
 
 Open Docker Desktop → Settings → Resources → WSL Integration → enable your distro.
 
-Then open your WSL2 terminal and run all `make` commands from there — no extra tools needed.
+Then open your WSL2 terminal and run all commands from there — no extra tools needed.
 
 ## Quick Start
 
@@ -94,7 +95,7 @@ Then run from a `pwsh` terminal:
 .\start.ps1 -Help                # show usage
 ```
 
-Both scripts start the container if it is not already running, then drop you into a bash shell. Use `make` targets for finer-grained control.
+Both scripts start the container if it is not already running, then drop you into a zsh shell.
 
 ## Supported Distributions
 
@@ -105,12 +106,28 @@ Both scripts start the container if it is not already running, then drop you int
 | Arch Linux | N/A | ⏳ Planned |
 
 ```bash
-make up-ubuntu   # Ubuntu 26.04 LTS
-make up-debian   # Debian 13 (trixie)
-
-# or inline
-BASE_IMAGE=debian:trixie docker-compose up -d
+./start.sh ubuntu   # Ubuntu 26.04 LTS
+./start.sh debian   # Debian 13 (trixie)
 ```
+
+## Multiple Instances
+
+Each named instance gets its own container, volume, and SSH port — no collisions:
+
+```bash
+./start.sh                          # ubuntu-dev, SSH :2222
+./start.sh debian                   # debian-dev, SSH :2223
+./start.sh --name work              # work,        SSH :2222
+./start.sh --name work --port 2224  # work,        SSH :2224
+```
+
+```powershell
+.\start.ps1                              # ubuntu-dev, SSH :2222
+.\start.ps1 -Distro debian              # debian-dev, SSH :2223
+.\start.ps1 -Name work -Port 2224       # work,        SSH :2224
+```
+
+Default SSH ports: ubuntu → `2222`, debian → `2223`.
 
 ## Configuration
 
@@ -119,13 +136,15 @@ BASE_IMAGE=debian:trixie docker-compose up -d
 | Argument | Default | Description |
 | --- | --- | --- |
 | `BASE_IMAGE` | `ubuntu:26.04` | Base distro image |
-| `INCLUDE_EXTRA_TOOLS` | `true` | Install bat, fzf, htop, jq, tmux, vim, zsh via apt |
+| `INCLUDE_EXTRA_TOOLS` | `true` | Install bat, fzf, htop, jq, tmux, vim via apt |
+| `INCLUDE_SSH_SERVER` | `true` | Install openssh-server, key-based auth only |
 | `SETUP_DOTFILES` | `true` | Clone and apply contento/dotfiles |
 
 ```bash
-# Minimal image (no extra tools, no dotfiles)
-docker-compose build \
+# Minimal image (no extra tools, no dotfiles, no SSH)
+docker compose build \
   --build-arg INCLUDE_EXTRA_TOOLS=false \
+  --build-arg INCLUDE_SSH_SERVER=false \
   --build-arg SETUP_DOTFILES=false
 ```
 
@@ -146,23 +165,35 @@ Adjust in `docker-compose.yml` under `deploy.resources` as needed.
 
 `git`, `curl`, `wget`, `build-essential`, `ca-certificates`, `gnupg`, `sudo`
 
+### Always installed (dev stage)
+
+`zsh` (default shell), `openssh-server`
+
 ### Optional (INCLUDE_EXTRA_TOOLS=true)
 
-`bat`, `fzf`, `htop`, `jq`, `less`, `man-db`, `tmux`, `vim`, `zsh`
+`bat`, `fzf`, `htop`, `jq`, `less`, `man-db`, `python-is-python3`, `tmux`, `vim`
 
 ### From contento/dotfiles (SETUP_DOTFILES=true)
 
 `bootstrap.sh` installs the full toolchain via apt + Homebrew, then `stow-all.sh` symlinks configs into `$HOME`. Includes: `neovim`, `starship`, `eza`, `ripgrep`, `lazygit`, `atuin`, `yazi`, `zoxide`, `node`, `go`, `rustup`, `tmux` plugins, zsh plugins, and more.
 
+All Homebrew-installed tools are on `PATH` out of the box.
+
 ## Dotfiles Integration
 
-When `SETUP_DOTFILES=true` (default), the build:
+When `SETUP_DOTFILES=true` (default), the setup runs in two phases:
+
+**Build time** (baked into the image):
 
 1. Clones `https://github.com/contento/dotfiles.git` to `~/.dotfiles`
 2. Runs `bootstrap.sh` — installs packages and terminal toolchain
 3. Runs `stow-all.sh` — symlinks configs into `$HOME`
 
-To skip: `--build-arg SETUP_DOTFILES=false`
+**Runtime** (entrypoint.sh, first start):
+
+The `dev_home` volume mounts over `/home/dev`, shadowing the build-time home dir. On first start, `entrypoint.sh` repeats the dotfiles setup into the live volume if `~/.dotfiles/.git` is absent.
+
+To skip dotfiles entirely: `--build-arg SETUP_DOTFILES=false`
 
 ## Architecture
 
@@ -171,23 +202,23 @@ ubuntu:26.04 / debian:trixie
     ↓
   base  — apt packages, locale, dev user
     ↓
-   dev  — optional tools, dotfiles (bootstrap + stow)
+   dev  — zsh, SSH server, optional tools, starship, dotfiles (bootstrap + stow)
 ```
 
 ## Persistence
 
 - **Workspace**: `./workspace` → `/home/dev/workspace` (bind mount, local)
-- **Home dir**: `dev_home` Docker volume (survives container restarts)
-- Data is lost only with `docker-compose down -v`
+- **Home dir**: `<name>_dev_home` Docker volume (survives container restarts)
+- Data is lost only with `docker compose down -v`
 
 ## SSH Access
 
-SSH server is included by default. To disable: `INCLUDE_SSH_SERVER=false docker compose build`.
+SSH server is included by default. To disable: `--build-arg INCLUDE_SSH_SERVER=false`.
 
-### 1. Start the container with your public key
+### 1. Start with your public key
 
 ```bash
-SSH_PUBLIC_KEY="$(cat ~/.ssh/id_ed25519.pub)" docker compose up -d
+SSH_PUBLIC_KEY="$(cat ~/.ssh/id_ed25519.pub)" ./start.sh
 ```
 
 The key is written to `/home/dev/.ssh/authorized_keys` on first start.
@@ -198,7 +229,7 @@ The key is written to `/home/dev/.ssh/authorized_keys` on first start.
 ssh -p 2222 dev@localhost
 ```
 
-Or add an entry to `~/.ssh/config` for convenience:
+Or add an entry to `~/.ssh/config`:
 
 ```sshconfig
 Host linux-dev
@@ -214,7 +245,7 @@ Then simply:
 ssh linux-dev
 ```
 
-Password login is disabled — key-based auth only. Change the host port by setting `SSH_PORT` before starting (default: `2222`).
+Password login is disabled — key-based auth only. Default ports: ubuntu → `2222`, debian → `2223`. Override with `--port` / `-Port`.
 
 ## Multi-platform
 
@@ -244,11 +275,11 @@ make clean     # stop + remove volumes
 
 ```bash
 # Force rebuild without cache
-docker-compose build --no-cache
+docker compose build --no-cache
 
 # Inspect running container
-docker-compose exec dev whoami   # should print: dev
-docker-compose exec dev pwd      # should print: /home/dev/workspace
+docker compose exec dev whoami   # should print: dev
+docker compose exec dev pwd      # should print: /home/dev/workspace
 
 # View build logs with timestamps
 docker build --progress=plain -t linux-dev:latest . 2>&1 | tee build.log
