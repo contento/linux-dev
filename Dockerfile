@@ -42,6 +42,9 @@ FROM base as dev
 
 # Additional dev tools (optional)
 ARG INCLUDE_EXTRA_TOOLS=true
+RUN apt-get update && apt-get install -y --no-install-recommends zsh \
+    && rm -rf /var/lib/apt/lists/* \
+    && chsh -s /bin/zsh dev
 RUN if [ "${INCLUDE_EXTRA_TOOLS}" = "true" ]; then \
     apt-get update && apt-get install -y --no-install-recommends \
     bat \
@@ -53,7 +56,6 @@ RUN if [ "${INCLUDE_EXTRA_TOOLS}" = "true" ]; then \
     python-is-python3 \
     tmux \
     vim \
-    zsh \
     && rm -rf /var/lib/apt/lists/*; \
     fi
 
@@ -96,4 +98,4 @@ RUN if [ "${SETUP_DOTFILES}" = "true" ]; then \
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-CMD ["/bin/bash", "-l"]
+CMD ["/bin/zsh", "-l"]

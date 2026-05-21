@@ -58,4 +58,4 @@ if (-not $running) {
     docker compose up -d
 }
 
-docker compose exec dev bash
+docker compose exec dev zsh
