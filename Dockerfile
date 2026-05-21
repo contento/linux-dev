@@ -13,7 +13,8 @@ LABEL description="Lightweight terminal-based development environment"
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=en_US.UTF-8 \
     LC_ALL=en_US.UTF-8 \
-    TZ=UTC
+    TZ=UTC \
+    PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:/usr/local/bin:${PATH}"
 
 # Install base packages (minimal footprint)
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -49,6 +50,7 @@ RUN if [ "${INCLUDE_EXTRA_TOOLS}" = "true" ]; then \
     jq \
     less \
     man-db \
+    python-is-python3 \
     tmux \
     vim \
     zsh \
