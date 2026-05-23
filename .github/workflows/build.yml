@@ -44,7 +44,9 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=sha,prefix={{branch}}-
 
-      # Single-platform build loaded into the local daemon for smoke testing
+      # Single-platform build loaded into the local daemon for smoke testing.
+      # Published image is intentionally minimal — consumers layer their own
+      # tools on top. All optional features are turned off.
       - name: Build image for smoke test
         uses: docker/build-push-action@v6
         with:
@@ -52,6 +54,10 @@ jobs:
           push: false
           load: true
           tags: linux-dev:test
+          build-args: |
+            INCLUDE_EXTRA_TOOLS=false
+            INCLUDE_SSH_SERVER=false
+            SETUP_DOTFILES=false
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -71,6 +77,10 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            INCLUDE_EXTRA_TOOLS=false
+            INCLUDE_SSH_SERVER=false
+            SETUP_DOTFILES=false
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

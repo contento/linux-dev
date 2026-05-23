@@ -4,7 +4,7 @@
 
 ARG BASE_IMAGE=ubuntu:26.04
 
-FROM ${BASE_IMAGE} as base
+FROM ${BASE_IMAGE} AS base
 
 LABEL maintainer="contento"
 LABEL description="Lightweight terminal-based development environment"
@@ -40,7 +40,7 @@ RUN useradd -m -s /bin/bash -G sudo dev \
     && chmod 0440 /etc/sudoers.d/dev
 
 # Development stage
-FROM base as dev
+FROM base AS dev
 
 # Additional dev tools (optional)
 ARG INCLUDE_EXTRA_TOOLS=true
@@ -85,14 +85,18 @@ WORKDIR /home/dev/workspace
 COPY --chown=dev:dev entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# Pre-install starship as root so bootstrap.sh (running as dev) skips the sudo-requiring installer
-RUN curl -fsSL https://starship.rs/install.sh | sh -s -- --yes
+# Setup dotfiles (opt-in)
+ARG SETUP_DOTFILES=false
+
+# Pre-install starship as root (only when dotfiles are enabled) so bootstrap.sh,
+# which runs as dev, doesn't hit the sudo/TTY-requiring installer.
+RUN if [ "${SETUP_DOTFILES}" = "true" ]; then \
+    curl -fsSL https://starship.rs/install.sh | sh -s -- --yes; \
+    fi
 
 # Switch to dev user
 USER dev
 
-# Setup dotfiles (opt-in)
-ARG SETUP_DOTFILES=false
 RUN if [ "${SETUP_DOTFILES}" = "true" ]; then \
     git clone --depth 1 https://github.com/contento/dotfiles.git ~/.dotfiles && \
     cd ~/.dotfiles && \

@@ -37,8 +37,11 @@ build-ubuntu: ## Build Ubuntu 26.04 LTS image
 build-debian: ## Build Debian 13 (trixie) image
 	BASE_IMAGE=$(DEBIAN_LTS) docker-compose build
 
-build-multiplatform: ## Build multi-platform image (amd64 + arm64) — requires buildx
+build-multiplatform: ## Build minimal multi-platform image (amd64 + arm64) matching the published GHCR image
 	docker buildx build --platform linux/amd64,linux/arm64 \
+	  --build-arg INCLUDE_EXTRA_TOOLS=false \
+	  --build-arg INCLUDE_SSH_SERVER=false \
+	  --build-arg SETUP_DOTFILES=false \
 	  -t linux-dev:latest .
 
 build-ssh: ## Build image with SSH server enabled
