@@ -1,9 +1,29 @@
-.PHONY: help build up down exec logs clean rebuild restart \
+.PHONY: help build up down exec logs clean clean-all rebuild restart \
         build-ubuntu build-debian up-ubuntu up-debian
 
 SHELL := /bin/bash
 
-# Distro targets
+# Pick distro with `make DISTRO=debian <target>` (default: ubuntu).
+# Mirrors start.sh so make and ./start.sh operate on the same containers/volumes.
+DISTRO ?= ubuntu
+
+ifeq ($(DISTRO),ubuntu)
+  BASE_IMAGE := ubuntu:26.04
+  SSH_PORT   := 2222
+else ifeq ($(DISTRO),debian)
+  BASE_IMAGE := debian:trixie
+  SSH_PORT   := 2223
+else
+  $(error Unknown DISTRO=$(DISTRO). Use ubuntu or debian)
+endif
+
+CONTAINER_NAME ?= $(DISTRO)-dev
+IMAGE_TAG      ?= $(DISTRO)
+
+export BASE_IMAGE CONTAINER_NAME IMAGE_TAG SSH_PORT
+export COMPOSE_PROJECT_NAME := $(CONTAINER_NAME)
+
+# Legacy aliases used by build-ubuntu / build-debian targets below
 UBUNTU_LTS := ubuntu:26.04
 DEBIAN_LTS := debian:trixie
 
@@ -75,9 +95,16 @@ logs: ## View container logs
 logs-tail: ## View last 50 lines of logs
 	docker-compose logs --tail 50 dev
 
-clean: ## Stop container and remove volumes (destructive)
-	docker-compose down -v
-	@echo -e "$(YELLOW)⚠ Container and volumes removed$(NC)"
+clean: ## Stop container and remove volumes for current DISTRO (destructive)
+	docker compose down -v --remove-orphans
+	@echo -e "$(YELLOW)⚠ $(CONTAINER_NAME): container, volumes, network removed$(NC)"
+
+clean-all: ## Tear down every linux-dev instance (ubuntu-dev, debian-dev) — destructive
+	@for project in ubuntu-dev debian-dev; do \
+	  echo -e "$(YELLOW)→ tearing down $$project$(NC)"; \
+	  COMPOSE_PROJECT_NAME=$$project docker compose down -v --remove-orphans 2>/dev/null || true; \
+	done
+	@echo -e "$(YELLOW)⚠ All linux-dev instances removed$(NC)"
 
 rebuild: clean build up ## Full rebuild: clean → build → up
 	@echo -e "$(GREEN)✓ Rebuild complete$(NC)"
