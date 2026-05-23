@@ -42,11 +42,10 @@ RUN useradd -m -s /bin/bash -G sudo dev \
 # Development stage
 FROM base AS dev
 
-# Additional dev tools (optional)
+# Install zsh (available to dotfiles users; not the login shell — bash is the default)
 ARG INCLUDE_EXTRA_TOOLS=true
 RUN apt-get update && apt-get install -y --no-install-recommends zsh \
-    && rm -rf /var/lib/apt/lists/* \
-    && chsh -s /bin/zsh dev
+    && rm -rf /var/lib/apt/lists/*
 RUN if [ "${INCLUDE_EXTRA_TOOLS}" = "true" ]; then \
     apt-get update && apt-get install -y --no-install-recommends \
     bat \
@@ -109,4 +108,4 @@ RUN if [ "${SETUP_DOTFILES}" = "true" ]; then \
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-CMD ["/bin/zsh", "-l"]
+CMD ["/bin/bash", "-l"]

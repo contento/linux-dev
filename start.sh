@@ -77,4 +77,4 @@ if ! docker compose ps --status running 2>/dev/null | grep -q dev; then
   docker compose up -d
 fi
 
-docker compose exec dev zsh
+docker compose exec dev bash

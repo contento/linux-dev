@@ -22,7 +22,7 @@ It is built around [contento/dotfiles](https://github.com/contento/dotfiles), so
 - **Flexible**: Build args for customizing tools and dotfiles setup
 - **Reproducible**: Consistent environment across machines
 - **User-safe**: Non-root `dev` user with passwordless sudo
-- **Terminal-first**: zsh + starship + full CLI toolchain via contento/dotfiles
+- **Terminal-first**: bash by default; opt in to zsh + starship + full CLI toolchain via contento/dotfiles
 - **SSH-ready**: SSH server included by default, key-based auth only
 - **Multi-instance**: Run multiple named containers without port or volume collisions
 
@@ -95,7 +95,7 @@ Then run from a `pwsh` terminal:
 .\start.ps1 -Help                # show usage
 ```
 
-Both scripts start the container if it is not already running, then drop you into a zsh shell.
+Both scripts start the container if it is not already running, then drop you into a bash shell. Run `zsh` once inside if you prefer that.
 
 ## Supported Distributions
 
@@ -169,7 +169,7 @@ Adjust in `docker-compose.yml` under `deploy.resources` as needed.
 
 ### Always installed (dev stage)
 
-`zsh` (default shell), `openssh-server`
+`bash` (default login shell), `zsh` (available if you prefer; configured automatically by dotfiles), `openssh-server`
 
 ### Optional (INCLUDE_EXTRA_TOOLS=true, default on)
 
@@ -209,7 +209,7 @@ ubuntu:26.04 / debian:trixie
     ↓
   base  — apt packages, locale, dev user
     ↓
-   dev  — zsh, SSH server, optional tools, starship, dotfiles (bootstrap + stow)
+   dev  — bash (default) + zsh, SSH server, optional tools; starship & dotfiles when SETUP_DOTFILES=true
 ```
 
 ## Persistence
@@ -261,7 +261,7 @@ The published `ghcr.io/contento/linux-dev` image is **intentionally minimal** so
 What's inside (~175 MB):
 
 - Base toolchain: `cc`/`gcc`, `make`, `git`, `curl`, `wget`, `grep`, `ssh` client, `sudo`, `unzip`, `xz-utils`
-- Shell: `zsh` (set as `dev` user's login shell)
+- Shell: `bash` (default login shell) and `zsh` (available)
 - Stock home directory — no dotfiles, no Homebrew, no starship
 
 **Not included** in the published image (opt-in via build args when you build locally):
