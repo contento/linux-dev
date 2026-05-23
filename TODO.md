@@ -2,10 +2,10 @@
 
 ## Priority: High
 
-- [ ] **CI/CD Pipeline**
-  - [ ] GitHub Actions: build and push to GHCR on release
-  - [ ] Automated smoke tests (image runs, user is dev, workspace exists)
-  - [ ] Security scanning (Trivy)
+- [x] **CI/CD Pipeline**
+  - [x] GitHub Actions: build and push to GHCR on push to main / tags
+  - [x] Automated smoke tests (image runs, user is dev, workspace exists)
+  - [x] Security scanning (Trivy config scan, SARIF upload to Code Scanning)
 
 - [x] **Multi-platform build**
   - [x] arm64 + amd64 via `docker buildx` (Apple Silicon + Linux x86)
