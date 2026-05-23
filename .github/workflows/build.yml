@@ -52,15 +52,13 @@ jobs:
           push: false
           load: true
           tags: linux-dev:test
-          build-args: |
-            SETUP_DOTFILES=false
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Smoke test
         run: |
-          docker run --rm -e SKIP_DOTFILES=true linux-dev:test whoami | grep -q dev
-          docker run --rm -e SKIP_DOTFILES=true linux-dev:test pwd | grep -q workspace
+          docker run --rm linux-dev:test whoami | grep -q dev
+          docker run --rm linux-dev:test pwd | grep -q workspace
           echo "✓ Smoke tests passed"
 
       # Multi-platform build pushed to registry on non-PR events
@@ -73,8 +71,6 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            SETUP_DOTFILES=false
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

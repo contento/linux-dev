@@ -39,7 +39,6 @@ build-debian: ## Build Debian 13 (trixie) image
 
 build-multiplatform: ## Build multi-platform image (amd64 + arm64) — requires buildx
 	docker buildx build --platform linux/amd64,linux/arm64 \
-	  --build-arg SETUP_DOTFILES=false \
 	  -t linux-dev:latest .
 
 build-ssh: ## Build image with SSH server enabled

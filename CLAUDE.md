@@ -4,15 +4,15 @@
 
 ## Project Overview
 
-**linux-dev** is a reproducible Docker development environment for terminal-based workflows on Debian/Ubuntu systems. It integrates with [contento/dotfiles](https://github.com/contento/dotfiles) to deliver a fully configured shell out of the box.
+**linux-dev** is a reproducible Docker development environment for terminal-based workflows on Debian/Ubuntu systems. It can optionally bake in [contento/dotfiles](https://github.com/contento/dotfiles) for a fully configured shell.
 
 ### Design Philosophy
 
-1. **Minimal**: Only include what's necessary; extras are optional
+1. **Minimal**: Only include what's necessary; extras are opt-in
 2. **Flexible**: Build args allow customization without code changes
 3. **Non-root**: `dev` user for safety; passwordless sudo for when needed
 4. **Reproducible**: Same setup across all machines
-5. **Dotfiles-first**: `bootstrap.sh` + `stow-all.sh` from contento/dotfiles do the heavy lifting
+5. **Dotfiles-optional**: `bootstrap.sh` + `stow-all.sh` from contento/dotfiles are available via `SETUP_DOTFILES=true`
 
 ## Architecture
 
@@ -27,23 +27,23 @@ Supported hosts: macOS, Linux, Windows 11 (WSL2 recommended — run all commands
 
 ### Dotfiles Integration
 
-When `SETUP_DOTFILES=true` (default):
+Dotfiles are **opt-in** (default is off). When `SETUP_DOTFILES=true` is set as a build arg and/or runtime env:
 
 1. Clone `contento/dotfiles` to `~/.dotfiles`
 2. Run `bootstrap.sh` — installs full toolchain via apt + Homebrew
 3. Remove default shell files that would conflict with stow (`~/.bashrc`, etc.)
 4. Run `stow-all.sh` — symlinks configs into `$HOME`
 
-`entrypoint.sh` repeats steps 1–4 at runtime if `~/.dotfiles/.git` is absent (useful when home dir is a fresh volume).
+`entrypoint.sh` repeats steps 1–4 at runtime when `SETUP_DOTFILES=true` and `~/.dotfiles/.git` is absent (useful when the home dir is a fresh volume on a dotfiles-built image).
 
-**Note**: CI/CD builds use `SETUP_DOTFILES=false` to avoid Homebrew installs in CI.
+**Note**: the default-off keeps CI builds fast (no Homebrew install). To get a fully-loaded local image, build with `SETUP_DOTFILES=true docker compose build`.
 
 ### Build Arguments
 
 - `BASE_IMAGE` (default: `ubuntu:26.04`) — base distro; also supports `debian:trixie`
 - `INCLUDE_EXTRA_TOOLS` (default: `true`) — installs bat, fzf, htop, jq, tmux, vim, zsh via apt
 - `INCLUDE_SSH_SERVER` (default: `true`) — installs openssh-server, disables password auth, restricts to `dev` user
-- `SETUP_DOTFILES` (default: `true`) — runs bootstrap.sh + stow-all.sh from contento/dotfiles
+- `SETUP_DOTFILES` (default: `false`) — opt-in; runs bootstrap.sh + stow-all.sh from contento/dotfiles. Also honoured at runtime by `entrypoint.sh`.
 
 `SSH_PUBLIC_KEY` env var (runtime, not build-time) — written to `~/.ssh/authorized_keys` by `entrypoint.sh` when SSH server is active. Port mapped as `SSH_PORT` (default `2222`) → `22`.
 
@@ -96,7 +96,7 @@ docker run --rm linux-dev:latest dpkg -l | grep "tool-name"
 ### After Dockerfile Changes
 
 ```bash
-docker build --no-cache -t linux-dev:test --build-arg SETUP_DOTFILES=false .
+docker build --no-cache -t linux-dev:test .
 docker run --rm linux-dev:test whoami   # dev
 docker run --rm linux-dev:test pwd      # /home/dev/workspace
 docker run --rm linux-dev:test which bat
@@ -115,7 +115,7 @@ docker-compose up -d && docker-compose exec dev whoami && docker-compose down
 | Pitfall | Solution |
 | --- | --- |
 | stow fails on existing files | Remove default shell files before `stow-all.sh` |
-| bootstrap.sh in CI hangs | Always set `SETUP_DOTFILES=false` in CI builds |
+| bootstrap.sh in CI hangs | Default is now off; only opt in (`SETUP_DOTFILES=true`) for local images |
 | Stale apt cache | `apt-get update` before any install |
 | Lost data on rebuild | Use named volumes (`dev_home`) |
 | Silent dotfiles failure | Check `~/.dotfiles/.git` exists after build |

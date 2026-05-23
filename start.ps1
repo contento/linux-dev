@@ -34,6 +34,7 @@ $defaultPorts  = @{ ubuntu = 2222;           debian = 2223 }
 $env:BASE_IMAGE           = $baseImages[$Distro]
 $env:CONTAINER_NAME       = if ($Name) { $Name } else { "$Distro-dev" }
 $env:SSH_PORT             = if ($Port -gt 0) { $Port } else { $defaultPorts[$Distro] }
+$env:IMAGE_TAG            = $Distro
 $env:COMPOSE_PROJECT_NAME = $env:CONTAINER_NAME
 
 $ErrorActionPreference = 'Stop'

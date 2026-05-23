@@ -51,9 +51,10 @@ esac
 
 CONTAINER_NAME="${NAME:-${DISTRO}-dev}"
 SSH_PORT="${PORT:-$DEFAULT_PORT}"
+IMAGE_TAG="$DISTRO"
 
 # Use container name as compose project so volumes/networks are isolated per instance
-export BASE_IMAGE CONTAINER_NAME SSH_PORT
+export BASE_IMAGE CONTAINER_NAME SSH_PORT IMAGE_TAG
 export COMPOSE_PROJECT_NAME="$CONTAINER_NAME"
 
 if ! docker info &>/dev/null; then

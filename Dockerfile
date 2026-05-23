@@ -84,8 +84,8 @@ RUN curl -fsSL https://starship.rs/install.sh | sh -s -- --yes
 # Switch to dev user
 USER dev
 
-# Setup dotfiles (optional)
-ARG SETUP_DOTFILES=true
+# Setup dotfiles (opt-in)
+ARG SETUP_DOTFILES=false
 RUN if [ "${SETUP_DOTFILES}" = "true" ]; then \
     git clone --depth 1 https://github.com/contento/dotfiles.git ~/.dotfiles && \
     cd ~/.dotfiles && \

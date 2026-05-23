@@ -138,14 +138,16 @@ Default SSH ports: ubuntu → `2222`, debian → `2223`.
 | `BASE_IMAGE` | `ubuntu:26.04` | Base distro image |
 | `INCLUDE_EXTRA_TOOLS` | `true` | Install bat, fzf, htop, jq, tmux, vim via apt |
 | `INCLUDE_SSH_SERVER` | `true` | Install openssh-server, key-based auth only |
-| `SETUP_DOTFILES` | `true` | Clone and apply contento/dotfiles |
+| `SETUP_DOTFILES` | `false` | Clone and apply contento/dotfiles (opt-in) |
 
 ```bash
-# Minimal image (no extra tools, no dotfiles, no SSH)
+# Minimal image (no extra tools, no SSH) — dotfiles are off by default
 docker compose build \
   --build-arg INCLUDE_EXTRA_TOOLS=false \
-  --build-arg INCLUDE_SSH_SERVER=false \
-  --build-arg SETUP_DOTFILES=false
+  --build-arg INCLUDE_SSH_SERVER=false
+
+# Opt in to dotfiles at build time
+SETUP_DOTFILES=true docker compose build
 ```
 
 ### Resource Limits
@@ -173,7 +175,7 @@ Adjust in `docker-compose.yml` under `deploy.resources` as needed.
 
 `bat`, `fzf`, `htop`, `jq`, `less`, `man-db`, `python-is-python3`, `tmux`, `vim`
 
-### From contento/dotfiles (SETUP_DOTFILES=true)
+### From contento/dotfiles (opt-in via SETUP_DOTFILES=true)
 
 `bootstrap.sh` installs the full toolchain via apt + Homebrew, then `stow-all.sh` symlinks configs into `$HOME`. Includes: `neovim`, `starship`, `eza`, `ripgrep`, `lazygit`, `atuin`, `yazi`, `zoxide`, `node`, `go`, `rustup`, `tmux` plugins, zsh plugins, and more.
 
@@ -181,7 +183,14 @@ All Homebrew-installed tools are on `PATH` out of the box.
 
 ## Dotfiles Integration
 
-When `SETUP_DOTFILES=true` (default), the setup runs in two phases:
+Dotfiles are **off by default**. Opt in with `SETUP_DOTFILES=true` at build time, runtime, or both:
+
+```bash
+SETUP_DOTFILES=true docker compose build      # bake into image
+SETUP_DOTFILES=true ./start.sh                # also bootstrap into a fresh volume
+```
+
+When enabled, the setup runs in two phases:
 
 **Build time** (baked into the image):
 
@@ -191,9 +200,7 @@ When `SETUP_DOTFILES=true` (default), the setup runs in two phases:
 
 **Runtime** (entrypoint.sh, first start):
 
-The `dev_home` volume mounts over `/home/dev`, shadowing the build-time home dir. On first start, `entrypoint.sh` repeats the dotfiles setup into the live volume if `~/.dotfiles/.git` is absent.
-
-To skip dotfiles entirely: `--build-arg SETUP_DOTFILES=false`
+The `dev_home` volume mounts over `/home/dev`, shadowing the build-time home dir. If `SETUP_DOTFILES=true` is also set at runtime and `~/.dotfiles/.git` is absent, `entrypoint.sh` re-runs the bootstrap into the live volume.
 
 ## Architecture
 

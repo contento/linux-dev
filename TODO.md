@@ -2,6 +2,17 @@
 
 ## Priority: High
 
+- [x] **Make dotfiles opt-in (flip default to `SETUP_DOTFILES=false`)**
+  - [x] `Dockerfile`: `ARG SETUP_DOTFILES=false`
+  - [x] `docker-compose.yml`: `${SETUP_DOTFILES:-false}` (both build arg and runtime env)
+  - [x] `entrypoint.sh`: replaced `SKIP_DOTFILES` opt-out with `SETUP_DOTFILES` opt-in
+  - [x] Updated `README.md`, `CLAUDE.md` to document the new default
+  - [x] Removed redundant `--build-arg SETUP_DOTFILES=false` from `Makefile` and CI
+
+- [x] **Image name: stop Compose auto-tagging as `<project>-dev`**
+  - [x] Added `image: linux-dev:${IMAGE_TAG:-latest}` to `docker-compose.yml`
+  - [x] `start.sh` / `start.ps1` export `IMAGE_TAG=$DISTRO` → `linux-dev:ubuntu` / `linux-dev:debian`
+
 - [x] **CI/CD Pipeline**
   - [x] GitHub Actions: build and push to GHCR on push to main / tags
   - [x] Automated smoke tests (image runs, user is dev, workspace exists)
