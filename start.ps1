@@ -28,7 +28,7 @@ if ($Help) {
     exit 0
 }
 
-$baseImages    = @{ ubuntu = "ubuntu:26.04"; debian = "debian:trixie" }
+$baseImages    = @{ ubuntu = "ubuntu:26.04"; debian = "debian:trixie-slim" }
 $defaultPorts  = @{ ubuntu = 2222;           debian = 2223 }
 
 $env:BASE_IMAGE           = $baseImages[$Distro]

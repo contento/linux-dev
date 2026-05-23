@@ -21,7 +21,7 @@
 - **base**: System packages, locale, `dev` user
 - **dev**: Optional apt tools (`INCLUDE_EXTRA_TOOLS`), dotfiles setup (`SETUP_DOTFILES`)
 
-Supported bases: `ubuntu:26.04` (default), `debian:trixie` — selected via `BASE_IMAGE` build arg.
+Supported bases: `ubuntu:26.04` (default), `debian:trixie-slim` — selected via `BASE_IMAGE` build arg.
 
 Supported hosts: macOS, Linux, Windows 11 (WSL2 recommended — run all commands from the WSL2 terminal). On Windows, PowerShell 7+ (`pwsh`) is required for `start.ps1`.
 
@@ -40,7 +40,7 @@ Dotfiles are **opt-in** (default is off). When `SETUP_DOTFILES=true` is set as a
 
 ### Build Arguments
 
-- `BASE_IMAGE` (default: `ubuntu:26.04`) — base distro; also supports `debian:trixie`
+- `BASE_IMAGE` (default: `ubuntu:26.04`) — base distro; also supports `debian:trixie-slim`
 - `INCLUDE_EXTRA_TOOLS` (default: `true`) — installs bat, fzf, htop, jq, tmux, vim, zsh via apt
 - `INCLUDE_SSH_SERVER` (default: `true`) — installs openssh-server, disables password auth, restricts to `dev` user
 - `SETUP_DOTFILES` (default: `false`) — opt-in; runs bootstrap.sh + stow-all.sh from contento/dotfiles. Also honoured at runtime by `entrypoint.sh`. The `starship` install in the Dockerfile is gated on this same flag.

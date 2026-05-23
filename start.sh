@@ -46,7 +46,7 @@ done
 
 case $DISTRO in
   ubuntu) BASE_IMAGE="ubuntu:26.04";  DEFAULT_PORT=2222 ;;
-  debian) BASE_IMAGE="debian:trixie"; DEFAULT_PORT=2223 ;;
+  debian) BASE_IMAGE="debian:trixie-slim"; DEFAULT_PORT=2223 ;;
 esac
 
 CONTAINER_NAME="${NAME:-${DISTRO}-dev}"

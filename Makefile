@@ -11,7 +11,7 @@ ifeq ($(DISTRO),ubuntu)
   BASE_IMAGE := ubuntu:26.04
   SSH_PORT   := 2222
 else ifeq ($(DISTRO),debian)
-  BASE_IMAGE := debian:trixie
+  BASE_IMAGE := debian:trixie-slim
   SSH_PORT   := 2223
 else
   $(error Unknown DISTRO=$(DISTRO). Use ubuntu or debian)
@@ -25,7 +25,7 @@ export COMPOSE_PROJECT_NAME := $(CONTAINER_NAME)
 
 # Legacy aliases used by build-ubuntu / build-debian targets below
 UBUNTU_LTS := ubuntu:26.04
-DEBIAN_LTS := debian:trixie
+DEBIAN_LTS := debian:trixie-slim
 
 # Color output (NC = no color / reset)
 BLUE   := \033[0;34m
@@ -95,16 +95,18 @@ logs: ## View container logs
 logs-tail: ## View last 50 lines of logs
 	docker-compose logs --tail 50 dev
 
-clean: ## Stop container and remove volumes for current DISTRO (destructive)
+clean: ## Tear down container, volumes, network AND image for current DISTRO (destructive)
 	docker compose down -v --remove-orphans
-	@echo -e "$(YELLOW)⚠ $(CONTAINER_NAME): container, volumes, network removed$(NC)"
+	-docker image rm linux-dev:$(IMAGE_TAG) 2>/dev/null
+	@echo -e "$(YELLOW)⚠ $(CONTAINER_NAME): container, volumes, network, image removed$(NC)"
 
-clean-all: ## Tear down every linux-dev instance (ubuntu-dev, debian-dev) — destructive
-	@for project in ubuntu-dev debian-dev; do \
-	  echo -e "$(YELLOW)→ tearing down $$project$(NC)"; \
-	  COMPOSE_PROJECT_NAME=$$project docker compose down -v --remove-orphans 2>/dev/null || true; \
+clean-all: ## Tear down every linux-dev instance + image (ubuntu-dev, debian-dev) — destructive
+	@for distro in ubuntu debian; do \
+	  echo -e "$(YELLOW)→ tearing down $$distro-dev$(NC)"; \
+	  COMPOSE_PROJECT_NAME=$$distro-dev docker compose down -v --remove-orphans 2>/dev/null || true; \
+	  docker image rm linux-dev:$$distro 2>/dev/null || true; \
 	done
-	@echo -e "$(YELLOW)⚠ All linux-dev instances removed$(NC)"
+	@echo -e "$(YELLOW)⚠ All linux-dev instances and images removed$(NC)"
 
 rebuild: clean build up ## Full rebuild: clean → build → up
 	@echo -e "$(GREEN)✓ Rebuild complete$(NC)"
@@ -145,13 +147,10 @@ info: ## Show environment info
 	@echo -e "Image: linux-dev:latest"
 	@echo -e "Container: linux-dev"
 
-rm-container: ## Remove container (without removing volumes)
-	docker-compose rm -f
+rm-container: ## Remove container (without removing volumes or image)
+	docker compose rm -f
 
-rm-image: ## Remove image
-	docker-compose down && docker rmi linux-dev:latest || true
-
-prune: ## Clean up all Docker resources (careful!)
+prune: ## Clean up all Docker resources system-wide (careful!)
 	@echo -e "$(YELLOW)Pruning Docker resources...$(NC)"
 	docker system prune -a --volumes
 	@echo -e "$(GREEN)✓ Cleanup complete$(NC)"

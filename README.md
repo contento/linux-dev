@@ -102,7 +102,7 @@ Both scripts start the container if it is not already running, then drop you int
 | Distribution | Base Image | Status |
 | --- | --- | --- |
 | Ubuntu 26.04 LTS (resolute) | `ubuntu:26.04` | ✅ Default |
-| Debian 13 (trixie) | `debian:trixie` | ✅ Supported |
+| Debian 13 (trixie) | `debian:trixie-slim` | ✅ Supported |
 | Arch Linux | N/A | ⏳ Planned |
 
 ```bash
@@ -205,7 +205,7 @@ The `dev_home` volume mounts over `/home/dev`, shadowing the build-time home dir
 ## Architecture
 
 ```text
-ubuntu:26.04 / debian:trixie
+ubuntu:26.04 / debian:trixie-slim
     ↓
   base  — apt packages, locale, dev user
     ↓
