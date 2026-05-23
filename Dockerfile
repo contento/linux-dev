@@ -26,7 +26,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     locales \
     openssh-client \
     sudo \
+    unzip \
     wget \
+    xz-utils \
     && rm -rf /var/lib/apt/lists/*
 
 # Setup locale
@@ -48,13 +50,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends zsh \
 RUN if [ "${INCLUDE_EXTRA_TOOLS}" = "true" ]; then \
     apt-get update && apt-get install -y --no-install-recommends \
     bat \
+    dnsutils \
     fzf \
     htop \
+    iputils-ping \
     jq \
     less \
     man-db \
     python-is-python3 \
+    ripgrep \
+    rsync \
     tmux \
+    tree \
     vim \
     && rm -rf /var/lib/apt/lists/*; \
     fi

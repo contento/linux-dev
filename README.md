@@ -165,15 +165,15 @@ Adjust in `docker-compose.yml` under `deploy.resources` as needed.
 
 ### Always installed (base image)
 
-`git`, `curl`, `wget`, `build-essential`, `ca-certificates`, `gnupg`, `sudo`
+`git`, `curl`, `wget`, `build-essential` (gcc, make, libc-dev), `ca-certificates`, `gnupg`, `openssh-client`, `sudo`, `unzip`, `xz-utils` — plus `grep`/coreutils that ship in the base image.
 
 ### Always installed (dev stage)
 
 `zsh` (default shell), `openssh-server`
 
-### Optional (INCLUDE_EXTRA_TOOLS=true)
+### Optional (INCLUDE_EXTRA_TOOLS=true, default on)
 
-`bat`, `fzf`, `htop`, `jq`, `less`, `man-db`, `python-is-python3`, `tmux`, `vim`
+`bat`, `dnsutils` (dig/nslookup), `fzf`, `htop`, `iputils-ping`, `jq`, `less`, `man-db`, `python-is-python3`, `ripgrep` (rg), `rsync`, `tmux`, `tree`, `vim`
 
 ### From contento/dotfiles (opt-in via SETUP_DOTFILES=true)
 
