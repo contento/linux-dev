@@ -43,7 +43,11 @@ Dotfiles are **opt-in** (default is off). When `SETUP_DOTFILES=true` is set as a
 - `BASE_IMAGE` (default: `ubuntu:26.04`) — base distro; also supports `debian:trixie`
 - `INCLUDE_EXTRA_TOOLS` (default: `true`) — installs bat, fzf, htop, jq, tmux, vim, zsh via apt
 - `INCLUDE_SSH_SERVER` (default: `true`) — installs openssh-server, disables password auth, restricts to `dev` user
-- `SETUP_DOTFILES` (default: `false`) — opt-in; runs bootstrap.sh + stow-all.sh from contento/dotfiles. Also honoured at runtime by `entrypoint.sh`.
+- `SETUP_DOTFILES` (default: `false`) — opt-in; runs bootstrap.sh + stow-all.sh from contento/dotfiles. Also honoured at runtime by `entrypoint.sh`. The `starship` install in the Dockerfile is gated on this same flag.
+
+### Published vs local image
+
+The image published to GHCR is built with **all three optional flags off** (`INCLUDE_EXTRA_TOOLS=false`, `INCLUDE_SSH_SERVER=false`, `SETUP_DOTFILES=false`) — see [.github/workflows/build.yml](.github/workflows/build.yml). It's the smallest possible base for consumers to extend. The local `./start.sh` flow builds with extras and SSH on (the daily-driver image), and dotfiles opt-in.
 
 `SSH_PUBLIC_KEY` env var (runtime, not build-time) — written to `~/.ssh/authorized_keys` by `entrypoint.sh` when SSH server is active. Port mapped as `SSH_PORT` (default `2222`) → `22`.
 

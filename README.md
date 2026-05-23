@@ -254,11 +254,27 @@ ssh linux-dev
 
 Password login is disabled — key-based auth only. Default ports: ubuntu → `2222`, debian → `2223`. Override with `--port` / `-Port`.
 
-## Multi-platform
+## Published image (GHCR)
 
-The published GHCR image supports `linux/amd64` and `linux/arm64` (built automatically on push to `main`).
+The published `ghcr.io/contento/linux-dev` image is **intentionally minimal** so consumers can layer their own tools on top. Built automatically on push to `main` for `linux/amd64` and `linux/arm64`.
 
-To build locally for both platforms:
+What's inside (~175 MB):
+
+- Base toolchain: `cc`/`gcc`, `make`, `git`, `curl`, `wget`, `grep`, `ssh` client, `sudo`, `unzip`, `xz-utils`
+- Shell: `zsh` (set as `dev` user's login shell)
+- Stock home directory — no dotfiles, no Homebrew, no starship
+
+**Not included** in the published image (opt-in via build args when you build locally):
+
+| Off in GHCR | Build arg to enable |
+| --- | --- |
+| Extra apt tools (`bat`, `fzf`, `htop`, `jq`, `ripgrep`, `tree`, `tmux`, `vim`, …) | `INCLUDE_EXTRA_TOOLS=true` |
+| SSH server (`sshd`) | `INCLUDE_SSH_SERVER=true` |
+| contento/dotfiles + bootstrap.sh + stow-all.sh | `SETUP_DOTFILES=true` |
+
+The local `./start.sh` / `make up` flow builds with extras and SSH **on** by default (dotfiles still off) — that's the daily-driver image. The minimal GHCR image is for users who want a clean base to extend.
+
+To reproduce the published image locally for both platforms:
 
 ```bash
 make build-multiplatform
