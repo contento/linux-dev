@@ -1,5 +1,5 @@
 .PHONY: help build up down exec logs clean clean-all rebuild restart \
-        build-ubuntu build-debian up-ubuntu up-debian
+        build-ubuntu build-debian build-arch up-ubuntu up-debian up-arch
 
 SHELL := /bin/bash
 
@@ -13,8 +13,11 @@ ifeq ($(DISTRO),ubuntu)
 else ifeq ($(DISTRO),debian)
   BASE_IMAGE := debian:trixie-slim
   SSH_PORT   := 2223
+else ifeq ($(DISTRO),arch)
+  BASE_IMAGE := archlinux:latest
+  SSH_PORT   := 2224
 else
-  $(error Unknown DISTRO=$(DISTRO). Use ubuntu or debian)
+  $(error Unknown DISTRO=$(DISTRO). Use ubuntu, debian, or arch)
 endif
 
 CONTAINER_NAME ?= $(DISTRO)-dev
@@ -42,8 +45,15 @@ help: ## Show this help message
 	@echo -e "$(GREEN)Distro targets:$(NC)"
 	@echo -e "  $(YELLOW)build-ubuntu$(NC)     Build Ubuntu 26.04 LTS image"
 	@echo -e "  $(YELLOW)build-debian$(NC)     Build Debian 13 (trixie) image"
+	@echo -e "  $(YELLOW)build-arch$(NC)       Build Arch Linux image"
 	@echo -e "  $(YELLOW)up-ubuntu$(NC)        Start Ubuntu LTS container"
 	@echo -e "  $(YELLOW)up-debian$(NC)        Start Debian LTS container"
+	@echo -e "  $(YELLOW)up-arch$(NC)          Start Arch Linux container"
+	@echo -e ""
+	@echo -e "$(GREEN)Levels:$(NC)"
+	@echo -e "  $(YELLOW)LEVEL=minimal$(NC)    Base packages only, bash, ~200MB"
+	@echo -e "  $(YELLOW)LEVEL=dev$(NC)        extra tools + SSH, ~500MB (default)"
+	@echo -e "  $(YELLOW)LEVEL=full$(NC)       dev + python3 + nodejs + npm, ~1GB"
 	@echo -e ""
 	@echo -e "$(GREEN)All targets:$(NC)"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(YELLOW)%-15s$(NC) %s\n", $$1, $$2}'
@@ -57,15 +67,16 @@ build-ubuntu: ## Build Ubuntu 26.04 LTS image
 build-debian: ## Build Debian 13 (trixie) image
 	BASE_IMAGE=$(DEBIAN_LTS) docker-compose build
 
+build-arch: ## Build Arch Linux image
+	docker build -t linux-dev:arch -f Dockerfile.arch .
+
 build-multiplatform: ## Build minimal multi-platform image (amd64 + arm64) matching the published GHCR image
 	docker buildx build --platform linux/amd64,linux/arm64 \
-	  --build-arg INCLUDE_EXTRA_TOOLS=false \
-	  --build-arg INCLUDE_SSH_SERVER=false \
-	  --build-arg SETUP_DOTFILES=false \
+	  --build-arg LEVEL=minimal \
 	  -t linux-dev:latest .
 
 build-ssh: ## Build image with SSH server enabled
-	INCLUDE_SSH_SERVER=true docker-compose build
+	LEVEL=dev docker-compose build
 
 up: ## Start the container (default: Ubuntu LTS)
 	docker-compose up -d
@@ -78,6 +89,13 @@ up-ubuntu: ## Start Ubuntu 24.04 LTS container
 up-debian: ## Start Debian 12 (bookworm) container
 	BASE_IMAGE=$(DEBIAN_LTS) docker-compose up -d
 	@echo -e "$(GREEN)✓ Debian container started$(NC)"
+
+up-arch: ## Start Arch Linux container
+	docker run -d --name linux-dev-arch \
+	  -v ./workspace:/home/dev/workspace \
+	  -p 2224:22 \
+	  linux-dev:arch
+	@echo -e "$(GREEN)✓ Arch Linux container started$(NC)"
 
 down: ## Stop the container
 	docker-compose down
@@ -100,8 +118,8 @@ clean: ## Tear down container, volumes, network AND image for current DISTRO (de
 	-docker image rm linux-dev:$(IMAGE_TAG) 2>/dev/null
 	@echo -e "$(YELLOW)⚠ $(CONTAINER_NAME): container, volumes, network, image removed$(NC)"
 
-clean-all: ## Tear down every linux-dev instance + image (ubuntu-dev, debian-dev) — destructive
-	@for distro in ubuntu debian; do \
+clean-all: ## Tear down every linux-dev instance + image (ubuntu-dev, debian-dev, arch-dev) — destructive
+	@for distro in ubuntu debian arch; do \
 	  echo -e "$(YELLOW)→ tearing down $$distro-dev$(NC)"; \
 	  COMPOSE_PROJECT_NAME=$$distro-dev docker compose down -v --remove-orphans 2>/dev/null || true; \
 	  docker image rm linux-dev:$$distro 2>/dev/null || true; \

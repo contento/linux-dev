@@ -1,6 +1,11 @@
 # Multi-stage Dockerfile for lightweight terminal dev environment
 # Supports: Ubuntu 26.04 LTS (resolute), Debian 13 (trixie)
 # All supported bases use apt — swap via BASE_IMAGE build arg
+#
+# Levels:
+#   minimal — base packages only, bash, ~200MB
+#   dev     — extra tools + SSH + dotfiles (opt-in), ~500MB (default)
+#   full    — dev + python3 + nodejs + npm, ~1GB
 
 ARG BASE_IMAGE=ubuntu:26.04
 
@@ -42,11 +47,17 @@ RUN useradd -m -s /bin/bash -G sudo dev \
 # Development stage
 FROM base AS dev
 
-# Install zsh (available to dotfiles users; not the login shell — bash is the default)
-ARG INCLUDE_EXTRA_TOOLS=true
-RUN apt-get update && apt-get install -y --no-install-recommends zsh \
-    && rm -rf /var/lib/apt/lists/*
-RUN if [ "${INCLUDE_EXTRA_TOOLS}" = "true" ]; then \
+# Level: minimal | dev | full
+ARG LEVEL=dev
+
+# Shell — zsh for dev and full, bash for minimal
+RUN if [ "${LEVEL}" != "minimal" ]; then \
+    apt-get update && apt-get install -y --no-install-recommends zsh \
+    && rm -rf /var/lib/apt/lists/*; \
+    fi
+
+# Extra dev tools — dev and full
+RUN if [ "${LEVEL}" = "dev" ] || [ "${LEVEL}" = "full" ]; then \
     apt-get update && apt-get install -y --no-install-recommends \
     bat \
     dnsutils \
@@ -65,9 +76,18 @@ RUN if [ "${INCLUDE_EXTRA_TOOLS}" = "true" ]; then \
     && rm -rf /var/lib/apt/lists/*; \
     fi
 
-# SSH server (optional — enable with INCLUDE_SSH_SERVER=true)
-ARG INCLUDE_SSH_SERVER=true
-RUN if [ "${INCLUDE_SSH_SERVER}" = "true" ]; then \
+# Full: add python3, nodejs, npm
+RUN if [ "${LEVEL}" = "full" ]; then \
+    apt-get update && apt-get install -y --no-install-recommends \
+    python3 \
+    python3-pip \
+    nodejs \
+    npm \
+    && rm -rf /var/lib/apt/lists/*; \
+    fi
+
+# SSH server — dev and full
+RUN if [ "${LEVEL}" != "minimal" ]; then \
     apt-get update && apt-get install -y --no-install-recommends openssh-server \
     && rm -rf /var/lib/apt/lists/* \
     && mkdir -p /run/sshd \
@@ -84,19 +104,16 @@ WORKDIR /home/dev/workspace
 COPY --chown=dev:dev entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# Setup dotfiles (opt-in)
+# Setup dotfiles (opt-in) — dev and full
 ARG SETUP_DOTFILES=false
-
-# Pre-install starship as root (only when dotfiles are enabled) so bootstrap.sh,
-# which runs as dev, doesn't hit the sudo/TTY-requiring installer.
-RUN if [ "${SETUP_DOTFILES}" = "true" ]; then \
+RUN if [ "${LEVEL}" != "minimal" ] && [ "${SETUP_DOTFILES}" = "true" ]; then \
     curl -fsSL https://starship.rs/install.sh | sh -s -- --yes; \
     fi
 
 # Switch to dev user
 USER dev
 
-RUN if [ "${SETUP_DOTFILES}" = "true" ]; then \
+RUN if [ "${LEVEL}" != "minimal" ] && [ "${SETUP_DOTFILES}" = "true" ]; then \
     git clone --depth 1 https://github.com/contento/dotfiles.git ~/.dotfiles && \
     cd ~/.dotfiles && \
     NONINTERACTIVE=1 bash bootstrap.sh && \
@@ -104,8 +121,11 @@ RUN if [ "${SETUP_DOTFILES}" = "true" ]; then \
     bash stow-all.sh; \
     fi
 
-# Default shell
+# Default shell — wrapper picks zsh when available, falls back to bash
+RUN printf '#!/bin/sh\nif command -v zsh >/dev/null 2>&1; then\n  exec /bin/zsh -l\nelse\n  exec /bin/bash -l\nfi\n' \
+    > /usr/local/bin/default-shell && chmod +x /usr/local/bin/default-shell
+
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-CMD ["/bin/bash", "-l"]
+CMD ["/usr/local/bin/default-shell"]

@@ -2,6 +2,16 @@
 #   Ubuntu LTS:  BASE_IMAGE=ubuntu:26.04 docker-compose up -d
 #   Debian LTS:  BASE_IMAGE=debian:trixie-slim docker-compose up -d
 
+# Levels:
+#   minimal — base packages only, bash, ~200MB
+#   dev     — extra tools + SSH + dotfiles (opt-in), ~500MB (default)
+#   full    — dev + python3 + nodejs + npm, ~1GB
+#
+# Usage:
+#   docker-compose up -d                    # dev level (default)
+#   LEVEL=minimal docker-compose up -d      # minimal
+#   LEVEL=full docker-compose up -d         # full
+
 services:
   dev:
     build:
@@ -9,8 +19,7 @@ services:
       dockerfile: Dockerfile
       args:
         BASE_IMAGE: ${BASE_IMAGE:-ubuntu:26.04}
-        INCLUDE_EXTRA_TOOLS: '${INCLUDE_EXTRA_TOOLS:-true}'
-        INCLUDE_SSH_SERVER: '${INCLUDE_SSH_SERVER:-true}'
+        LEVEL: '${LEVEL:-dev}'
         SETUP_DOTFILES: '${SETUP_DOTFILES:-false}'
 
     image: linux-dev:${IMAGE_TAG:-latest}
@@ -20,7 +29,7 @@ services:
     stdin_open: true
     tty: true
 
-    # SSH access — only active when image built with INCLUDE_SSH_SERVER=true
+    # SSH access — only active when LEVEL != minimal
     ports:
       - "${SSH_PORT:-2222}:22"
 

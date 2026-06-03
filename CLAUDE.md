@@ -4,7 +4,7 @@
 
 ## Project Overview
 
-**linux-dev** is a reproducible Docker development environment for terminal-based workflows on Debian/Ubuntu systems. It can optionally bake in [contento/dotfiles](https://github.com/contento/dotfiles) for a fully configured shell.
+**linux-dev** is a reproducible Docker development environment for terminal-based workflows on Linux systems. It can optionally bake in [contento/dotfiles](https://github.com/contento/dotfiles) for a fully configured shell.
 
 ### Design Philosophy
 
@@ -19,11 +19,21 @@
 ### Multi-stage Dockerfile
 
 - **base**: System packages, locale, `dev` user
-- **dev**: Optional apt tools (`INCLUDE_EXTRA_TOOLS`), dotfiles setup (`SETUP_DOTFILES`)
+- **dev**: Level-based tooling (`LEVEL` build arg), dotfiles setup (`SETUP_DOTFILES`)
 
-Supported bases: `ubuntu:26.04` (default), `debian:trixie-slim` — selected via `BASE_IMAGE` build arg.
+Supported bases: `ubuntu:26.04` (default), `debian:trixie-slim`, `archlinux:latest` — selected via `BASE_IMAGE` build arg (Debian/Ubuntu) or `Dockerfile.arch` (Arch).
 
 Supported hosts: macOS, Linux, Windows 11 (WSL2 recommended — run all commands from the WSL2 terminal). On Windows, PowerShell 7+ (`pwsh`) is required for `start.ps1`.
+
+### Levels
+
+The `LEVEL` build arg controls what gets installed:
+
+| Level | Shell | Tools | SSH | Dotfiles | Python/Node | Size |
+| --- | --- | --- | --- | --- | --- | --- |
+| `minimal` | bash | base only | ✗ | ✗ | ✗ | ~200MB |
+| `dev` | bash + zsh | bat, fzf, htop, jq, tmux, vim | ✓ | opt-in | ✗ | ~500MB |
+| `full` | bash + zsh | dev + python3 + nodejs + npm | ✓ | opt-in | ✓ | ~1GB |
 
 ### Dotfiles Integration
 
@@ -41,13 +51,12 @@ Dotfiles are **opt-in** (default is off). When `SETUP_DOTFILES=true` is set as a
 ### Build Arguments
 
 - `BASE_IMAGE` (default: `ubuntu:26.04`) — base distro; also supports `debian:trixie-slim`
-- `INCLUDE_EXTRA_TOOLS` (default: `true`) — installs bat, fzf, htop, jq, tmux, vim, zsh via apt
-- `INCLUDE_SSH_SERVER` (default: `true`) — installs openssh-server, disables password auth, restricts to `dev` user
+- `LEVEL` (default: `dev`) — `minimal` (~200MB), `dev` (~500MB), `full` (~1GB)
 - `SETUP_DOTFILES` (default: `false`) — opt-in; runs bootstrap.sh + stow-all.sh from contento/dotfiles. Also honoured at runtime by `entrypoint.sh`. The `starship` install in the Dockerfile is gated on this same flag.
 
 ### Published vs local image
 
-The image published to GHCR is built with **all three optional flags off** (`INCLUDE_EXTRA_TOOLS=false`, `INCLUDE_SSH_SERVER=false`, `SETUP_DOTFILES=false`) — see [.github/workflows/build.yml](.github/workflows/build.yml). It's the smallest possible base for consumers to extend. The local `./start.sh` flow builds with extras and SSH on (the daily-driver image), and dotfiles opt-in.
+The image published to GHCR is built with `LEVEL=minimal` — see [.github/workflows/build.yml](.github/workflows/build.yml). It's the smallest possible base for consumers to extend. The local `./start.sh` flow builds with `LEVEL=dev` (the daily-driver image), and dotfiles opt-in.
 
 `SSH_PUBLIC_KEY` env var (runtime, not build-time) — written to `~/.ssh/authorized_keys` by `entrypoint.sh` when SSH server is active. Port mapped as `SSH_PORT` (default `2222`) → `22`.
 
@@ -100,11 +109,27 @@ docker run --rm linux-dev:latest dpkg -l | grep "tool-name"
 ### After Dockerfile Changes
 
 ```bash
-docker build --no-cache -t linux-dev:test .
-docker run --rm linux-dev:test whoami   # dev
-docker run --rm linux-dev:test pwd      # /home/dev/workspace
-docker run --rm linux-dev:test which bat
-docker run --rm linux-dev:test which tmux
+# Test minimal level
+docker build --no-cache -t linux-dev:test-minimal --build-arg LEVEL=minimal .
+docker run --rm linux-dev:test-minimal whoami   # dev
+docker run --rm linux-dev:test-minimal pwd      # /home/dev/workspace
+docker run --rm linux-dev:test-minimal bash -c "command -v zsh || echo 'no zsh'"
+
+# Test dev level (default)
+docker build --no-cache -t linux-dev:test-dev .
+docker run --rm linux-dev:test-dev whoami
+docker run --rm linux-dev:test-dev which bat
+docker run --rm linux-dev:test-dev which tmux
+
+# Test full level
+docker build --no-cache -t linux-dev:test-full --build-arg LEVEL=full .
+docker run --rm linux-dev:test-full which python3
+docker run --rm linux-dev:test-full which node
+
+# Test Arch Linux
+docker build --no-cache -t linux-dev:test-arch -f Dockerfile.arch .
+docker run --rm linux-dev:test-arch whoami
+docker run --rm linux-dev:test-arch pacman --version
 ```
 
 ### After docker-compose Changes
@@ -127,7 +152,7 @@ docker-compose up -d && docker-compose exec dev whoami && docker-compose down
 ## Security
 
 - Non-root `dev` user with `NOPASSWD` sudo (remove sudo for sensitive environments)
-- Official base images only (Ubuntu, Debian)
+- Official base images only (Ubuntu, Debian, Arch)
 - Trivy scan runs in CI on every push to main
 
 ## Resources

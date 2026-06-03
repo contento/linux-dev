@@ -1,6 +1,6 @@
 # linux-dev: Lightweight Terminal Development Environment
 
-A minimal, reproducible Docker development environment for Debian-based Linux distributions.
+A minimal, reproducible Docker development environment for Linux distributions.
 
 ```text
   o  o
@@ -18,7 +18,7 @@ It is built around [contento/dotfiles](https://github.com/contento/dotfiles), so
 
 ## Features
 
-- **Multi-distro**: Ubuntu 26.04 LTS (default), Debian 13 (trixie)
+- **Multi-distro**: Ubuntu 26.04 LTS (default), Debian 13 (trixie), Arch Linux
 - **Flexible**: Build args for customizing tools and dotfiles setup
 - **Reproducible**: Consistent environment across machines
 - **User-safe**: Non-root `dev` user with passwordless sudo
@@ -103,11 +103,12 @@ Both scripts start the container if it is not already running, then drop you int
 | --- | --- | --- |
 | Ubuntu 26.04 LTS (resolute) | `ubuntu:26.04` | ✅ Default |
 | Debian 13 (trixie) | `debian:trixie-slim` | ✅ Supported |
-| Arch Linux | N/A | ⏳ Planned |
+| Arch Linux | `archlinux:latest` | ✅ Supported |
 
 ```bash
 ./start.sh ubuntu   # Ubuntu 26.04 LTS
 ./start.sh debian   # Debian 13 (trixie)
+make build-arch    # Arch Linux
 ```
 
 ## Multiple Instances
@@ -129,6 +130,27 @@ Each named instance gets its own container, volume, and SSH port — no collisio
 
 Default SSH ports: ubuntu → `2222`, debian → `2223`.
 
+## Levels
+
+Choose the right level for your use case:
+
+| Level | Size | Shell | Tools | SSH | Python/Node |
+| --- | --- | --- | --- | --- | --- |
+| `minimal` | ~200MB | bash | base only | ✗ | ✗ |
+| `dev` | ~500MB | bash + zsh | bat, fzf, htop, jq, tmux, vim | ✓ | ✗ |
+| `full` | ~1GB | bash + zsh | dev + python3 + nodejs + npm | ✓ | ✓ |
+
+```bash
+# Minimal — just the essentials
+LEVEL=minimal docker compose up -d
+
+# Dev — full terminal experience (default)
+docker compose up -d
+
+# Full — dev + Python + Node.js
+LEVEL=full docker compose up -d
+```
+
 ## Configuration
 
 ### Build Arguments
@@ -136,15 +158,18 @@ Default SSH ports: ubuntu → `2222`, debian → `2223`.
 | Argument | Default | Description |
 | --- | --- | --- |
 | `BASE_IMAGE` | `ubuntu:26.04` | Base distro image |
-| `INCLUDE_EXTRA_TOOLS` | `true` | Install bat, fzf, htop, jq, tmux, vim via apt |
-| `INCLUDE_SSH_SERVER` | `true` | Install openssh-server, key-based auth only |
+| `LEVEL` | `dev` | `minimal` (~200MB), `dev` (~500MB), `full` (~1GB) |
 | `SETUP_DOTFILES` | `false` | Clone and apply contento/dotfiles (opt-in) |
 
 ```bash
-# Minimal image (no extra tools, no SSH) — dotfiles are off by default
-docker compose build \
-  --build-arg INCLUDE_EXTRA_TOOLS=false \
-  --build-arg INCLUDE_SSH_SERVER=false
+# Minimal image (~200MB — base packages only, no extra tools, no SSH)
+docker compose build --build-arg LEVEL=minimal
+
+# Dev image (~500MB — extra tools + SSH, default)
+docker compose build
+
+# Full image (~1GB — dev + python3 + nodejs + npm)
+docker compose build --build-arg LEVEL=full
 
 # Opt in to dotfiles at build time
 SETUP_DOTFILES=true docker compose build
@@ -167,13 +192,13 @@ Adjust in `docker-compose.yml` under `deploy.resources` as needed.
 
 `git`, `curl`, `wget`, `build-essential` (gcc, make, libc-dev), `ca-certificates`, `gnupg`, `openssh-client`, `sudo`, `unzip`, `xz-utils` — plus `grep`/coreutils that ship in the base image.
 
-### Always installed (dev stage)
+### Dev level
 
-`bash` (default login shell), `zsh` (available if you prefer; configured automatically by dotfiles), `openssh-server`
+`bash` (default login shell), `zsh` (available if you prefer), `openssh-server`, `bat`, `dnsutils` (dig/nslookup), `fzf`, `htop`, `iputils-ping`, `jq`, `less`, `man-db`, `python-is-python3`, `ripgrep` (rg), `rsync`, `tmux`, `tree`, `vim`
 
-### Optional (INCLUDE_EXTRA_TOOLS=true, default on)
+### Full level
 
-`bat`, `dnsutils` (dig/nslookup), `fzf`, `htop`, `iputils-ping`, `jq`, `less`, `man-db`, `python-is-python3`, `ripgrep` (rg), `rsync`, `tmux`, `tree`, `vim`
+All dev tools + `python3`, `python3-pip`, `nodejs`, `npm`
 
 ### From contento/dotfiles (opt-in via SETUP_DOTFILES=true)
 
@@ -205,11 +230,11 @@ The `dev_home` volume mounts over `/home/dev`, shadowing the build-time home dir
 ## Architecture
 
 ```text
-ubuntu:26.04 / debian:trixie-slim
+ubuntu:26.04 / debian:trixie-slim / archlinux:latest
     ↓
-  base  — apt packages, locale, dev user
+  base  — apt/pacman packages, locale, dev user
     ↓
-   dev  — bash (default) + zsh, SSH server, optional tools; starship & dotfiles when SETUP_DOTFILES=true
+   dev  — bash + zsh (dev/full), SSH (dev/full), tools (dev/full); starship & dotfiles when SETUP_DOTFILES=true
 ```
 
 ## Persistence
@@ -220,7 +245,7 @@ ubuntu:26.04 / debian:trixie-slim
 
 ## SSH Access
 
-SSH server is included by default. To disable: `--build-arg INCLUDE_SSH_SERVER=false`.
+SSH server is included in dev and full levels. To disable: `--build-arg LEVEL=minimal`.
 
 ### 1. Start with your public key
 
@@ -268,8 +293,8 @@ What's inside (~175 MB):
 
 | Off in GHCR | Build arg to enable |
 | --- | --- |
-| Extra apt tools (`bat`, `fzf`, `htop`, `jq`, `ripgrep`, `tree`, `tmux`, `vim`, …) | `INCLUDE_EXTRA_TOOLS=true` |
-| SSH server (`sshd`) | `INCLUDE_SSH_SERVER=true` |
+| Extra apt tools (`bat`, `fzf`, `htop`, `jq`, `ripgrep`, `tree`, `tmux`, `vim`, …) | `LEVEL=dev` or `LEVEL=full` |
+| SSH server (`sshd`) | `LEVEL=dev` or `LEVEL=full` |
 | contento/dotfiles + bootstrap.sh + stow-all.sh | `SETUP_DOTFILES=true` |
 
 The local `./start.sh` / `make up` flow builds with extras and SSH **on** by default (dotfiles still off) — that's the daily-driver image. The minimal GHCR image is for users who want a clean base to extend.

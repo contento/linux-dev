@@ -23,15 +23,15 @@
   - [x] Publish both platforms to GHCR on release
 
 - [x] **SSH Server mode**
-  - [x] Install and configure `openssh-server` via `INCLUDE_SSH_SERVER=true`
+  - [x] Install and configure `openssh-server` via `LEVEL != minimal`
   - [x] Port 2222→22 mapped in `docker-compose.yml`
   - [x] `SSH_PUBLIC_KEY` env var writes to `~/.ssh/authorized_keys` at startup
 
 ## Priority: Medium
 
-- [ ] **Arch Linux Support**
-  - [ ] `Dockerfile.arch` using `archlinux:latest` base
-  - [ ] Add `make build-arch` / `make up-arch` targets
+- [x] **Arch Linux Support**
+  - [x] `Dockerfile.arch` using `archlinux:latest` base
+  - [x] Add `make build-arch` / `make up-arch` targets
 
 - [ ] **Docker Compose Profiles**
   - [ ] `databases`: PostgreSQL, Redis
@@ -48,11 +48,12 @@
 - [x] docker-compose.yml with resource limits
 - [x] Non-root dev user with passwordless sudo
 - [x] Locale and timezone setup
-- [x] Optional tools layer (INCLUDE_EXTRA_TOOLS)
+- [x] LEVEL build arg (minimal | dev | full)
 - [x] Named volume for home directory persistence (dev_home)
 - [x] Makefile with distro targets
 - [x] Dotfiles integration: bootstrap.sh + stow-all.sh from contento/dotfiles
 - [x] Ubuntu 26.04 LTS + Debian 13 (trixie) support
+- [x] Arch Linux support
 - [x] GitHub Actions CI/CD workflow
 
 ## Known Issues
