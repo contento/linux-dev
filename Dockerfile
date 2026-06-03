@@ -110,6 +110,10 @@ RUN if [ "${LEVEL}" != "minimal" ] && [ "${SETUP_DOTFILES}" = "true" ]; then \
     curl -fsSL https://starship.rs/install.sh | sh -s -- --yes; \
     fi
 
+# Default shell — wrapper picks zsh when available, falls back to bash
+RUN printf '#!/bin/sh\nif command -v zsh >/dev/null 2>&1; then\n  exec /bin/zsh -l\nelse\n  exec /bin/bash -l\nfi\n' \
+    > /usr/local/bin/default-shell && chmod +x /usr/local/bin/default-shell
+
 # Switch to dev user
 USER dev
 
@@ -120,10 +124,6 @@ RUN if [ "${LEVEL}" != "minimal" ] && [ "${SETUP_DOTFILES}" = "true" ]; then \
     rm -f ~/.bashrc ~/.bash_logout ~/.profile && \
     bash stow-all.sh; \
     fi
-
-# Default shell — wrapper picks zsh when available, falls back to bash
-RUN printf '#!/bin/sh\nif command -v zsh >/dev/null 2>&1; then\n  exec /bin/zsh -l\nelse\n  exec /bin/bash -l\nfi\n' \
-    > /usr/local/bin/default-shell && chmod +x /usr/local/bin/default-shell
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
