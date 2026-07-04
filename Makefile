@@ -1,5 +1,7 @@
-.PHONY: help build up down exec logs clean clean-all rebuild restart \
-        build-ubuntu build-debian build-arch up-ubuntu up-debian up-arch
+.PHONY: help build up down exec exec-zsh logs logs-tail clean clean-all rebuild restart \
+        build-ubuntu build-debian build-arch build-multiplatform build-ssh \
+        up-ubuntu up-debian up-arch ps test shell version lint-dockerfile \
+        validate-compose info rm-container prune
 
 SHELL := /bin/bash
 
@@ -59,13 +61,13 @@ help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(YELLOW)%-15s$(NC) %s\n", $$1, $$2}'
 
 build: ## Build the Docker image (default: Ubuntu LTS)
-	docker-compose build
+	docker compose build
 
 build-ubuntu: ## Build Ubuntu 26.04 LTS image
-	BASE_IMAGE=$(UBUNTU_LTS) docker-compose build
+	BASE_IMAGE=$(UBUNTU_LTS) docker compose build
 
 build-debian: ## Build Debian 13 (trixie) image
-	BASE_IMAGE=$(DEBIAN_LTS) docker-compose build
+	BASE_IMAGE=$(DEBIAN_LTS) docker compose build
 
 build-arch: ## Build Arch Linux image
 	docker build -t linux-dev:arch -f Dockerfile.arch .
@@ -76,42 +78,42 @@ build-multiplatform: ## Build minimal multi-platform image (amd64 + arm64) match
 	  -t linux-dev:latest .
 
 build-ssh: ## Build image with SSH server enabled
-	LEVEL=dev docker-compose build
+	LEVEL=dev docker compose build
 
 up: ## Start the container (default: Ubuntu LTS)
-	docker-compose up -d
+	docker compose up -d
 	@echo -e "$(GREEN)✓ Container started$(NC)"
 
-up-ubuntu: ## Start Ubuntu 24.04 LTS container
-	BASE_IMAGE=$(UBUNTU_LTS) docker-compose up -d
+up-ubuntu: ## Start Ubuntu 26.04 LTS container
+	BASE_IMAGE=$(UBUNTU_LTS) docker compose up -d
 	@echo -e "$(GREEN)✓ Ubuntu container started$(NC)"
 
-up-debian: ## Start Debian 12 (bookworm) container
-	BASE_IMAGE=$(DEBIAN_LTS) docker-compose up -d
+up-debian: ## Start Debian 13 (trixie) container
+	BASE_IMAGE=$(DEBIAN_LTS) docker compose up -d
 	@echo -e "$(GREEN)✓ Debian container started$(NC)"
 
 up-arch: ## Start Arch Linux container
-	docker run -d --name linux-dev-arch \
-	  -v ./workspace:/home/dev/workspace \
+	docker run -dit --name linux-dev-arch \
+	  -v $(CURDIR)/workspace:/home/dev/workspace \
 	  -p 2224:22 \
 	  linux-dev:arch
 	@echo -e "$(GREEN)✓ Arch Linux container started$(NC)"
 
 down: ## Stop the container
-	docker-compose down
+	docker compose down
 	@echo -e "$(GREEN)✓ Container stopped$(NC)"
 
 exec: ## Enter the container shell
-	docker-compose exec dev bash
+	docker compose exec dev bash
 
 exec-zsh: ## Enter the container with zsh
-	docker-compose exec dev zsh
+	docker compose exec dev zsh
 
 logs: ## View container logs
-	docker-compose logs -f dev
+	docker compose logs -f dev
 
 logs-tail: ## View last 50 lines of logs
-	docker-compose logs --tail 50 dev
+	docker compose logs --tail 50 dev
 
 clean: ## Tear down container, volumes, network AND image for current DISTRO (destructive)
 	docker compose down -v --remove-orphans
@@ -126,44 +128,43 @@ clean-all: ## Tear down every linux-dev instance + image (ubuntu-dev, debian-dev
 	done
 	@echo -e "$(YELLOW)⚠ All linux-dev instances and images removed$(NC)"
 
-rebuild: clean build up ## Full rebuild: clean → build → up
+rebuild: clean build up ## Full rebuild: clean → build → up (destructive: clean removes volumes)
 	@echo -e "$(GREEN)✓ Rebuild complete$(NC)"
 
 restart: ## Restart the container
-	docker-compose restart
+	docker compose restart
 	@echo -e "$(GREEN)✓ Container restarted$(NC)"
 
 ps: ## Show container status
-	docker-compose ps
+	docker compose ps
 
 test: ## Test container functionality
 	@echo -e "$(BLUE)Testing container...$(NC)"
-	docker-compose exec dev whoami
-	docker-compose exec dev pwd
-	docker-compose exec dev bash --version
+	docker compose exec dev whoami
+	docker compose exec dev pwd
+	docker compose exec dev bash --version
 	@echo -e "$(GREEN)✓ All tests passed$(NC)"
 
-shell: ## Alias for 'exec'
-	make exec
+shell: exec ## Alias for 'exec'
 
 version: ## Show Docker and Docker Compose versions
 	@echo -e "Docker version:" && docker --version
-	@echo -e "Docker Compose version:" && docker-compose --version
+	@echo -e "Docker Compose version:" && docker compose version
 
 lint-dockerfile: ## Check Dockerfile syntax (requires hadolint)
 	@which hadolint > /dev/null || (echo -e "$(YELLOW)hadolint not found. Install: brew install hadolint$(NC)" && exit 1)
 	hadolint Dockerfile
 
 validate-compose: ## Validate docker-compose.yml
-	docker-compose config --quiet && echo -e "$(GREEN)✓ docker-compose.yml is valid$(NC)"
+	docker compose config --quiet && echo -e "$(GREEN)✓ docker-compose.yml is valid$(NC)"
 
 info: ## Show environment info
 	@echo -e "$(BLUE)Environment Information:$(NC)"
 	@echo -e "OS: $$(uname -s)"
 	@echo -e "Docker: $$(docker --version)"
-	@echo -e "Compose: $$(docker-compose --version)"
-	@echo -e "Image: linux-dev:latest"
-	@echo -e "Container: linux-dev"
+	@echo -e "Compose: $$(docker compose version)"
+	@echo -e "Image: linux-dev:$(IMAGE_TAG)"
+	@echo -e "Container: $(CONTAINER_NAME)"
 
 rm-container: ## Remove container (without removing volumes or image)
 	docker compose rm -f

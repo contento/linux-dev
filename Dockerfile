@@ -14,6 +14,8 @@ FROM ${BASE_IMAGE} AS base
 LABEL maintainer="contento"
 LABEL description="Lightweight terminal-based development environment"
 
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 # Set environment
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=en_US.UTF-8 \
@@ -39,8 +41,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Setup locale
 RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && locale-gen
 
-# Create dev user (unprivileged)
-RUN useradd -m -s /bin/bash -G sudo dev \
+# Create dev user (unprivileged) at UID 1000 — ubuntu:24.04+ ships a default
+# "ubuntu" user squatting on 1000, which would push dev to 1001 and break
+# bind-mount ownership vs the debian build
+RUN userdel -r ubuntu 2>/dev/null || true \
+    && useradd -m -u 1000 -s /bin/bash -G sudo dev \
     && echo "dev ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/dev \
     && chmod 0440 /etc/sudoers.d/dev
 
@@ -124,8 +129,6 @@ RUN if [ "${LEVEL}" != "minimal" ] && [ "${SETUP_DOTFILES}" = "true" ]; then \
     rm -f ~/.bashrc ~/.bash_logout ~/.profile && \
     bash stow-all.sh; \
     fi
-
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["/usr/local/bin/default-shell"]

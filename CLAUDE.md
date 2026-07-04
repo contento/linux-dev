@@ -136,7 +136,7 @@ docker run --rm linux-dev:test-arch pacman --version
 
 ```bash
 docker compose config   # validate
-docker-compose up -d && docker-compose exec dev whoami && docker-compose down
+docker compose up -d && docker compose exec dev whoami && docker compose down
 ```
 
 ## Common Pitfalls

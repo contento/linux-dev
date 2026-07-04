@@ -286,7 +286,7 @@ The published `ghcr.io/contento/linux-dev` image is **intentionally minimal** so
 What's inside (~175 MB):
 
 - Base toolchain: `cc`/`gcc`, `make`, `git`, `curl`, `wget`, `grep`, `ssh` client, `sudo`, `unzip`, `xz-utils`
-- Shell: `bash` (default login shell) and `zsh` (available)
+- Shell: `bash` (no zsh at the minimal level — install it yourself or build with `LEVEL=dev`)
 - Stock home directory — no dotfiles, no Homebrew, no starship
 
 **Not included** in the published image (opt-in via build args when you build locally):

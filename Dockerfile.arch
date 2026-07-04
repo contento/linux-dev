@@ -9,6 +9,8 @@ FROM archlinux:latest
 LABEL maintainer="contento"
 LABEL description="Arch Linux terminal-based development environment"
 
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 # Set environment
 ENV TERM=xterm-256color \
     LANG=en_US.UTF-8 \
@@ -27,8 +29,8 @@ RUN pacman -Syu --noconfirm && \
 # Setup locale
 RUN echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen && locale-gen
 
-# Create dev user (unprivileged)
-RUN useradd -m -s /bin/bash -G wheel dev && \
+# Create dev user (unprivileged) at UID 1000 to match the Ubuntu/Debian images
+RUN useradd -m -u 1000 -s /bin/bash -G wheel dev && \
     echo "dev ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/dev && \
     chmod 0440 /etc/sudoers.d/dev
 
@@ -99,8 +101,6 @@ RUN if [ "${LEVEL}" != "minimal" ] && [ "${SETUP_DOTFILES}" = "true" ]; then \
 # Default shell — wrapper picks zsh when available, falls back to bash
 RUN printf '#!/bin/sh\nif command -v zsh >/dev/null 2>&1; then\n  exec /bin/zsh -l\nelse\n  exec /bin/bash -l\nfi\n' \
     > /usr/local/bin/default-shell && chmod +x /usr/local/bin/default-shell
-
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["/usr/local/bin/default-shell"]
