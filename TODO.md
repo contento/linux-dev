@@ -33,9 +33,9 @@
   - [x] `Dockerfile.arch` using `archlinux:latest` base
   - [x] Add `make build-arch` / `make up-arch` targets
 
-- [ ] **Docker Compose Profiles**
-  - [ ] `databases`: PostgreSQL, Redis
-  - [ ] `dev`: full environment with port mappings
+- [x] **Docker Compose Profiles**
+  - [x] `databases`: PostgreSQL 17 + Redis 8, opt-in via `--profile databases` / `make up-db`
+  - [x] `dev`: stays the always-on default service (no profile needed) with SSH port mapping
 
 ## Priority: Low
 

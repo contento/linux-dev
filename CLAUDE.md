@@ -60,6 +60,10 @@ The image published to GHCR is built with `LEVEL=minimal` — see [.github/workf
 
 `SSH_PUBLIC_KEY` env var (runtime, not build-time) — written to `~/.ssh/authorized_keys` by `entrypoint.sh` when SSH server is active. Port mapped as `SSH_PORT` (default `2222`) → `22`.
 
+### Database Services (Compose profile)
+
+`postgres` (postgres:17-alpine) and `redis` (redis:8-alpine) services live behind the opt-in `databases` profile in `docker-compose.yml` — `docker compose up` never starts them. Enable with `docker compose --profile databases up -d` or `make up-db`. The Makefile exports per-distro `POSTGRES_PORT`/`REDIS_PORT` (ubuntu: 5432/6379, debian: 5433/6380, arch: 5434/6381) alongside `SSH_PORT`. Credentials default to `dev`/`dev`/`dev` (`POSTGRES_USER`/`POSTGRES_PASSWORD`/`POSTGRES_DB`). Data persists in `pg_data` / `redis_data` named volumes; `make down`/`make clean` include `--profile databases` so teardown catches the db containers.
+
 ### Non-root User
 
 ```bash

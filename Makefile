@@ -1,6 +1,6 @@
 .PHONY: help build up down exec exec-zsh logs logs-tail clean clean-all rebuild restart \
         build-ubuntu build-debian build-arch build-multiplatform build-ssh \
-        up-ubuntu up-debian up-arch ps test shell version lint-dockerfile \
+        up-ubuntu up-debian up-arch up-db ps test shell version lint-dockerfile \
         validate-compose info rm-container prune
 
 SHELL := /bin/bash
@@ -10,14 +10,20 @@ SHELL := /bin/bash
 DISTRO ?= ubuntu
 
 ifeq ($(DISTRO),ubuntu)
-  BASE_IMAGE := ubuntu:26.04
-  SSH_PORT   := 2222
+  BASE_IMAGE    := ubuntu:26.04
+  SSH_PORT      := 2222
+  POSTGRES_PORT := 5432
+  REDIS_PORT    := 6379
 else ifeq ($(DISTRO),debian)
-  BASE_IMAGE := debian:trixie-slim
-  SSH_PORT   := 2223
+  BASE_IMAGE    := debian:trixie-slim
+  SSH_PORT      := 2223
+  POSTGRES_PORT := 5433
+  REDIS_PORT    := 6380
 else ifeq ($(DISTRO),arch)
-  BASE_IMAGE := archlinux:latest
-  SSH_PORT   := 2224
+  BASE_IMAGE    := archlinux:latest
+  SSH_PORT      := 2224
+  POSTGRES_PORT := 5434
+  REDIS_PORT    := 6381
 else
   $(error Unknown DISTRO=$(DISTRO). Use ubuntu, debian, or arch)
 endif
@@ -25,7 +31,7 @@ endif
 CONTAINER_NAME ?= $(DISTRO)-dev
 IMAGE_TAG      ?= $(DISTRO)
 
-export BASE_IMAGE CONTAINER_NAME IMAGE_TAG SSH_PORT
+export BASE_IMAGE CONTAINER_NAME IMAGE_TAG SSH_PORT POSTGRES_PORT REDIS_PORT
 export COMPOSE_PROJECT_NAME := $(CONTAINER_NAME)
 
 # Legacy aliases used by build-ubuntu / build-debian targets below
@@ -99,8 +105,12 @@ up-arch: ## Start Arch Linux container
 	  linux-dev:arch
 	@echo -e "$(GREEN)✓ Arch Linux container started$(NC)"
 
-down: ## Stop the container
-	docker compose down
+up-db: ## Start the container plus PostgreSQL + Redis (databases profile)
+	docker compose --profile databases up -d
+	@echo -e "$(GREEN)✓ Container + databases started (postgres:$(POSTGRES_PORT), redis:$(REDIS_PORT))$(NC)"
+
+down: ## Stop the container (and databases, if running)
+	docker compose --profile databases down
 	@echo -e "$(GREEN)✓ Container stopped$(NC)"
 
 exec: ## Enter the container shell
@@ -116,14 +126,14 @@ logs-tail: ## View last 50 lines of logs
 	docker compose logs --tail 50 dev
 
 clean: ## Tear down container, volumes, network AND image for current DISTRO (destructive)
-	docker compose down -v --remove-orphans
+	docker compose --profile databases down -v --remove-orphans
 	-docker image rm linux-dev:$(IMAGE_TAG) 2>/dev/null
 	@echo -e "$(YELLOW)⚠ $(CONTAINER_NAME): container, volumes, network, image removed$(NC)"
 
 clean-all: ## Tear down every linux-dev instance + image (ubuntu-dev, debian-dev, arch-dev) — destructive
 	@for distro in ubuntu debian arch; do \
 	  echo -e "$(YELLOW)→ tearing down $$distro-dev$(NC)"; \
-	  COMPOSE_PROJECT_NAME=$$distro-dev docker compose down -v --remove-orphans 2>/dev/null || true; \
+	  COMPOSE_PROJECT_NAME=$$distro-dev docker compose --profile databases down -v --remove-orphans 2>/dev/null || true; \
 	  docker image rm linux-dev:$$distro 2>/dev/null || true; \
 	done
 	@echo -e "$(YELLOW)⚠ All linux-dev instances and images removed$(NC)"

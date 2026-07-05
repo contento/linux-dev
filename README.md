@@ -186,6 +186,29 @@ Defaults in `docker-compose.yml`:
 
 Adjust in `docker-compose.yml` under `deploy.resources` as needed.
 
+### Database Services (Compose profile)
+
+PostgreSQL 17 and Redis 8 are available behind the opt-in `databases` profile — they never start unless you ask:
+
+```bash
+docker compose --profile databases up -d   # dev container + postgres + redis
+make up-db                                 # same, with per-distro ports
+
+docker compose up -d                       # dev container only (default)
+```
+
+From inside the dev container, connect via the service hostnames `postgres` and `redis` (same Docker network). From the host, use the mapped ports.
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `POSTGRES_USER` | `dev` | PostgreSQL user |
+| `POSTGRES_PASSWORD` | `dev` | PostgreSQL password |
+| `POSTGRES_DB` | `dev` | Initial database |
+| `POSTGRES_PORT` | `5432` | Host port → 5432 |
+| `REDIS_PORT` | `6379` | Host port → 6379 |
+
+`make up-db` assigns per-distro host ports to avoid collisions (ubuntu: 5432/6379, debian: 5433/6380, arch: 5434/6381). Data persists in the `pg_data` and `redis_data` named volumes; `make clean` removes them.
+
 ## Included Tools
 
 ### Always installed (base image)

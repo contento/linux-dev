@@ -62,8 +62,51 @@ services:
     # Restart policy
     restart: unless-stopped
 
+  # Optional databases — opt-in via profile:
+  #   docker compose --profile databases up -d   (or: make up-db)
+  # Reachable from the dev container as hosts `postgres` and `redis`.
+  postgres:
+    image: postgres:17-alpine
+    profiles: ["databases"]
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-dev}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dev}
+      POSTGRES_DB: ${POSTGRES_DB:-dev}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - devnet
+    restart: unless-stopped
+
+  redis:
+    image: redis:8-alpine
+    profiles: ["databases"]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - devnet
+    restart: unless-stopped
+
 volumes:
   dev_home:
+    driver: local
+  pg_data:
+    driver: local
+  redis_data:
     driver: local
 
 networks:
